@@ -164,7 +164,7 @@ if __name__ == "__main__":
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [tmnre.py] | Update bounds from round {round_id}"
         )
         bounds = (
-            sl.bounds.get_rect_bounds(logratios, threshold=conf["tmnre"]["bounds_th"])
+            sl.bounds.get_recte_bounds(logratios, threshold=conf["tmnre"]["bounds_th"])
             .bounds.squeeze(1)
             .numpy()
         )
