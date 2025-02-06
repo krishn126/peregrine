@@ -50,15 +50,9 @@ class InferenceNetwork(sl.SwyftModule):
         self.linear_t = LinearCompression()
         self.linear_f = LinearCompression()
 
-        # self.logratios_1d = sl.LogRatioEstimator_1dim(
-        #     num_features=32, num_params=int(self.num_params), varnames="z_total"
-        # )
         if not self.one_d_only:
             self.linear_t_2d = LinearCompression_2d()
             self.linear_f_2d = LinearCompression_2d()
-            # self.logratios_2d = sl.LogRatioEstimator_Ndim(
-            #     num_features=256, marginals=self.marginals, varnames="z_total"
-            # )
 
         self.optimizer_init = sl.AdamOptimizerInit(lr=conf["hparams"]["learning_rate"])
 
@@ -261,15 +255,6 @@ def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int):
     device_params = conf["device_params"]
     hparams = conf["hparams"]
 
-    # trainer = sl.SwyftTrainer(
-    #     accelerator=device_params["device"],
-    #     gpus=device_params["n_devices"],
-    #     min_epochs=hparams["min_epochs"],
-    #     max_epochs=hparams["max_epochs"],
-    #     logger=logger_tbl,
-    #     callbacks=[lr_monitor, early_stopping_callback, checkpoint_callback],
-    # )
-
     embedding_net = init_network(conf)
     density_estimator = posterior_nn(
         model="maf",
@@ -282,28 +267,6 @@ def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int):
         callbacks=[lr_monitor, early_stopping_callback, checkpoint_callback]
       )
     return density_estimator
-
-
-# def save_logratios(logratios, conf, round_id):
-#     """
-#     Save logratios from a particular round
-#     Args:
-#       logratios: swyft logratios instance
-#       conf: dictionary of config options, output of init_config
-#       round_id: specific round id for store name
-#     """
-#     if not os.path.isdir(
-#         f"{conf['zarr_params']['store_path']}/logratios_{conf['zarr_params']['run_id']}"
-#     ):
-#         os.mkdir(
-#             f"{conf['zarr_params']['store_path']}/logratios_{conf['zarr_params']['run_id']}"
-#         )
-#     with open(
-#         f"{conf['zarr_params']['store_path']}/logratios_{conf['zarr_params']['run_id']}/logratios_R{round_id}",
-#         "wb",
-#     ) as p:
-#         pickle.dump(logratios, p)
-
 
 def save_bounds(bounds, conf: dict, round_id: int):
     """

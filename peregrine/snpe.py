@@ -19,16 +19,84 @@ from inference_utils_snpe import (
     setup_zarr_store,
     setup_dataloader,
     setup_density_estimator,
-    init_network,
     save_bounds,
     load_bounds,
 )
+from sbi.inference import SNPE
+from sbi.utils.get_nn_models import posterior_nn
+import torch
+import torch.distributions as dist
+from sbi.utils import MultipleIndependent
+from sbi.utils import BoxUniform
+import itertools
 
 # For parallelisation
 import subprocess
 import psutil
 import logging
 
+class SineDistribution(dist.Distribution):
+    """
+    Custom sine-distributed probability distribution over [0, pi],
+    defined by p(x) = (1/2) * sin(x).
+    """
+    
+    arg_constraints = {}  # No additional parameters
+    support = dist.constraints.interval(torch.tensor([0.0]), torch.pi)  # Support is [0, pi]
+
+    def __init__(self, validate_args=None):
+        super().__init__(validate_args=validate_args)
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Uses inverse CDF sampling: x = arccos(1 - U), where U ~ Uniform(0,1)
+        """
+        u = torch.rand(sample_shape)
+        return torch.acos(1 - u)  # Returns samples in [0, pi]
+
+    def log_prob(self, x):
+        """
+        Log probability of the sine distribution: log( (1/2) * sin(x) )
+        """
+        inside_support = (x >= torch.tensor([0.0])) & (x <= torch.pi)
+        log_probs = torch.where(
+            inside_support,
+            torch.log(torch.tensor([0.5]) * torch.sin(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+        )
+        return log_probs
+
+class CosineDistribution(dist.Distribution):
+    """
+    Custom cosine-distributed probability distribution over [-pi/2, pi/2],
+    defined by p(x) = (1/2) * cos(x).
+    """
+    
+    arg_constraints = {}  # No additional parameters
+    support = dist.constraints.interval(-torch.pi / 2, torch.pi / 2)  # Support is [-π/2, π/2]
+
+    def __init__(self, validate_args=None):
+        super().__init__(validate_args=validate_args)
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Uses inverse CDF sampling: x = arcsin(2U - 1), where U ~ Uniform(0,1)
+        """
+        u = torch.rand(sample_shape)
+        return torch.asin(2 * u - 1)  # Returns samples in [-π/2, π/2]
+
+    def log_prob(self, x):
+        """
+        Log probability of the cosine distribution: log( (1/2) * cos(x) )
+        """
+        inside_support = (x >= -torch.pi / 2) & (x <= torch.pi / 2)
+        log_probs = torch.where(
+            inside_support,
+            torch.log(torch.tensor([0.5]) * torch.cos(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+        )
+        return log_probs
+    
 if __name__ == "__main__":
     args = sys.argv[1:]
     print(
@@ -96,7 +164,7 @@ if __name__ == "__main__":
                 p = subprocess.Popen(
                     [
                         "python",
-                        "run_parallel.py",
+                        "run_parallel_snpe.py",
                         f"{conf['zarr_params']['store_path']}/config_{conf['zarr_params']['run_id']}.txt",
                         str(round_id),
                     ]
@@ -118,14 +186,72 @@ if __name__ == "__main__":
         )
 
         print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Setting up trainer for round {round_id}"
+            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Setting up trainer and network for round {round_id}"
         )
-        trainer = setup_trainer(trainer_dir, conf, round_id)
 
-        print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Initialising network for round {round_id}"
-        )
-        network = init_network(conf)
+        # # Define priors 
+        # priors = {
+        #     "mass_ratio": dist.Uniform(torch.tensor([0.125]), torch.tensor([1.0])),
+        #     "chirp_mass": dist.Uniform(torch.tensor([25.0]), torch.tensor([100.0])),
+        #     "theta_jn": SineDistribution(), 
+        #     "phase": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+        #     "tilt_1": SineDistribution(),
+        #     "tilt_2": SineDistribution(),
+        #     "a_1": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+        #     "a_2": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+        #     "phi_12": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+        #     "phi_jl": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+        #     "luminosity_distance": dist.Uniform(torch.tensor([100.0]), torch.tensor([1500.0])),
+        #     "dec": CosineDistribution(),  # Assuming it already has event_shape=(1,)
+        #     "ra": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+        #     "psi": dist.Uniform(torch.tensor([0.0]), torch.tensor([3.14159])),
+        #     "geocent_time": dist.Uniform(torch.tensor([-0.1]), torch.tensor([0.1])),
+        # }
+
+        # priors_sequence = list(priors.values())
+        # joint_prior = MultipleIndependent(priors_sequence)
+        # Define min and max tensors for each parameter
+
+        prior_min = torch.tensor([
+            0.125,   # mass_ratio
+            25.0,    # chirp_mass
+            0.0,     # theta_jn (Sine prior will be handled separately)
+            0.0,     # phase
+            0.0,     # tilt_1 (Sine prior)
+            0.0,     # tilt_2 (Sine prior)
+            0.05,    # a_1
+            0.05,    # a_2
+            0.0,     # phi_12
+            0.0,     # phi_jl
+            100.0,   # luminosity_distance
+            -1.0,    # dec (Cosine prior will be handled separately)
+            0.0,     # ra
+            0.0,     # psi
+            -0.1     # geocent_time
+        ])
+
+        prior_max = torch.tensor([
+            1.0,     # mass_ratio
+            100.0,   # chirp_mass
+            3.14159, # theta_jn
+            6.28318, # phase
+            3.14159, # tilt_1
+            3.14159, # tilt_2
+            1.0,     # a_1
+            1.0,     # a_2
+            6.28318, # phi_12
+            6.28318, # phi_jl
+            1500.0,  # luminosity_distance
+            1.0,     # dec
+            6.28318, # ra
+            3.14159, # psi
+            0.1      # geocent_time
+        ])
+
+        # Use BoxUniform to create a joint prior
+        joint_prior = BoxUniform(low=prior_min, high=prior_max)
+
+        inference = SNPE(prior=joint_prior, density_estimator=setup_density_estimator(trainer_dir, conf, round_id))
 
         if (
             not conf["snpe"]["infer_only"]
@@ -134,39 +260,18 @@ if __name__ == "__main__":
             print(
                 f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training network for round {round_id}"
             )
-            trainer.fit(network, train_data, val_data)
+            theta, train_data = train_data.dataset.tensors
+            density_estimator = inference.append_simulations(theta, train_data).train()
             logging.info(
                 f"Training completed for round {round_id}, checkpoint available at {glob.glob(f'{trainer_dir}/epoch*_R{round_id}.ckpt')[0]}"
             )
 
         print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Generate prior samples"
-        )
-        prior_sim = init_simulator(conf, load_bounds(conf, round_id))
-        prior_samples = prior_sim.sample(100_000, targets=["z_total"])
-
-        print(
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Generate posterior samples"
         )
-        trainer.test(
-            network, val_data, glob.glob(f"{trainer_dir}/epoch*_R{round_id}.ckpt")[0]
-        )
-        logratios = trainer.infer(
-            network, obs, prior_samples.get_dataloader(batch_size=2048)
-        )
-        logging.info(f"Logratios saved for round {round_id}")
-        print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Saving logratios from round {round_id}"
-        )
-        save_logratios(logratios, conf, round_id)
-        print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Update bounds from round {round_id}"
-        )
-        bounds = (
-            sl.bounds.get_recte_bounds(logratios, threshold=conf["snpe"]["bounds_th"])
-            .bounds.squeeze(1)
-            .numpy()
-        )
+        posterior = inference.build_posterior(density_estimator)
+        posterior_samples = posterior.sample(10000, x=obs)
+
         save_bounds(bounds, conf, round_id)
         end_time = datetime.now()
         logging.info(f"Completed round {round_id}")
