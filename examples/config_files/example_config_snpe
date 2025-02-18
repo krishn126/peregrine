@@ -71,7 +71,7 @@ store_path = snpe_store/test_new_install
 run_description = 15D test for precessing BBH with high spin and low S/N
 
 [SNPE]
-num_rounds = 8
+num_rounds = 1
 1d_only = True
 infer_only = True
 marginals = (0,1)

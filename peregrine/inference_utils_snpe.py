@@ -10,18 +10,18 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 import swyft.lightning as sl
 from sbi.inference import SNPE
 from sbi.utils.get_nn_models import posterior_nn
-import wandb
+# import wandb
 
-wandb.init(
-    project="Peregrine - SNPE Inference",
-    # track hyperparameters and run metadata
-    config={
-        "learning_rate": 0.01,
-        "architecture": "CNN",
-        "dataset": "CIFAR-100",
-        "epochs": 10,
-    },
-)
+# wandb.init(
+#     project="Peregrine - SNPE Inference",
+#     # track hyperparameters and run metadata
+#     config={
+#         "learning_rate": 0.01,
+#         "architecture": "CNN",
+#         "dataset": "CIFAR-100",
+#         "epochs": 10,
+#     },
+# )
 
 class InferenceNetwork(sl.SwyftModule):
     def __init__(self, conf):
@@ -56,16 +56,24 @@ class InferenceNetwork(sl.SwyftModule):
 
         self.optimizer_init = sl.AdamOptimizerInit(lr=conf["hparams"]["learning_rate"])
 
-    def forward(self, A, B):
-        if self.noise_shuffling and A["d_t"].size(0) != 1:
-            noise_shuffling = torch.randperm(self.batch_size)
-            d_t = A["d_t"] + A["n_t"][noise_shuffling]
-            d_f_w = A["d_f_w"] + A["n_f_w"][noise_shuffling]
-        else:
-            d_t = A["d_t"] + A["n_t"]
-            d_f_w = A["d_f_w"] + A["n_f_w"]
-        z_total = B["z_total"]
-
+    def forward(self, x):
+        # if self.noise_shuffling and A["d_t"].size(0) != 1:
+        #     noise_shuffling = torch.randperm(self.batch_size)
+        #     d_t = A["d_t"] + A["n_t"][noise_shuffling]
+        #     d_f_w = A["d_f_w"] + A["n_f_w"][noise_shuffling]
+        # else:
+        #     d_t = A["d_t"] + A["n_t"]
+        #     d_f_w = A["d_f_w"] + A["n_f_w"]
+        # make the first 8192 values of x the time domain data
+        #define the elements between 16386, 24578 to be n_t
+        n_t = x[:, :3, 24576:32768]
+        n_f_w = x[:, :, 40960:45057]
+        d_t = x[:, :3, 0:8192]
+        d_f_w = x[:, :, 16384:20481]
+        
+        d_t = d_t + n_t
+        d_f_w = d_f_w + n_f_w
+       
         d_t = self.unet_t(d_t)
         d_f_w = self.unet_f(d_f_w)
 
@@ -73,17 +81,17 @@ class InferenceNetwork(sl.SwyftModule):
             features_t = self.linear_t(self.flatten(d_t))
             features_f = self.linear_f(self.flatten(d_f_w))
             features = torch.cat([features_t, features_f], dim=1)
-            # logratios_1d = self.logratios_1d(features, z_total)
+            features = features_t
             features_t_2d = self.linear_t_2d(self.flatten(d_t))
             features_f_2d = self.linear_f_2d(self.flatten(d_f_w))
             features_2d = torch.cat([features_t_2d, features_f_2d], dim=1)
-            # logratios_2d = self.logratios_2d(features_2d, z_total)
+            features_2d = features_t_2d
             return features, features_2d
         else:
             features_t = self.linear_t(self.flatten(d_t))
             features_f = self.linear_f(self.flatten(d_f_w))
             features = torch.cat([features_t, features_f], dim=1)
-            # logratios_1d = self.logratios_1d(features, z_total)
+            features = features_t
             return features
 
 
@@ -388,7 +396,6 @@ class Up(nn.Module):
         )
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
-
 
 class OutConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=1):

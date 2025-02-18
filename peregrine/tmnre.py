@@ -145,7 +145,7 @@ if __name__ == "__main__":
         )
         prior_sim = init_simulator(conf, load_bounds(conf, round_id))
         prior_samples = prior_sim.sample(100_000, targets=["z_total"])
-
+        
         print(
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [tmnre.py] | Generate posterior samples"
         )
