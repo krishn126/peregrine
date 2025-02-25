@@ -10,18 +10,18 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 import swyft.lightning as sl
 from sbi.inference import SNPE
 from sbi.utils.get_nn_models import posterior_nn
-# import wandb
+import wandb
 
-# wandb.init(
-#     project="Peregrine - SNPE Inference",
-#     # track hyperparameters and run metadata
-#     config={
-#         "learning_rate": 0.01,
-#         "architecture": "CNN",
-#         "dataset": "CIFAR-100",
-#         "epochs": 10,
-#     },
-# )
+wandb.init(
+    project="Peregrine - SNPE Inference",
+    # track hyperparameters and run metadata
+    config={
+        "learning_rate": 0.01,
+        "architecture": "CNN",
+        "dataset": "CIFAR-100",
+        "epochs": 10,
+    },
+)
 
 class InferenceNetwork(sl.SwyftModule):
     def __init__(self, conf):
@@ -274,6 +274,7 @@ def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int):
         logger=logger_tbl,
         callbacks=[lr_monitor, early_stopping_callback, checkpoint_callback]
       )
+    # current_lr = optimizer.param_groups[0]["lr"]  
     return density_estimator
 
 def save_bounds(bounds, conf: dict, round_id: int):

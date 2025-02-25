@@ -282,48 +282,10 @@ if __name__ == "__main__":
             "geocent_time",
         ]
 
-        # priors_sequence = list(priors.values())
+        # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
 
-        # prior_min = torch.tensor([
-        #     0.125,   # mass_ratio
-        #     25.0,    # chirp_mass
-        #     0.0,     # theta_jn (Sine prior will be handled separately)
-        #     0.0,     # phase
-        #     0.0,     # tilt_1 (Sine prior)
-        #     0.0,     # tilt_2 (Sine prior)
-        #     0.05,    # a_1
-        #     0.05,    # a_2
-        #     0.0,     # phi_12
-        #     0.0,     # phi_jl
-        #     100.0,   # luminosity_distance
-        #     -1.0,    # dec (Cosine prior will be handled separately)
-        #     0.0,     # ra
-        #     0.0,     # psi
-        #     -0.1     # geocent_time
-        # ])
-
-        # prior_max = torch.tensor([
-        #     1.0,     # mass_ratio
-        #     100.0,   # chirp_mass
-        #     3.14159, # theta_jn
-        #     6.28318, # phase
-        #     3.14159, # tilt_1
-        #     3.14159, # tilt_2
-        #     1.0,     # a_1
-        #     1.0,     # a_2
-        #     6.28318, # phi_12
-        #     6.28318, # phi_jl
-        #     1500.0,  # luminosity_distance
-        #     1.0,     # dec
-        #     6.28318, # ra
-        #     3.14159, # psi
-        #     0.1      # geocent_time
-        # ])
-
-        # # Use BoxUniform to create a joint prior
-        # joint_prior = BoxUniform(low=prior_min, high=prior_max)
-
+        # Define the inference object
         inference = SNPE(prior=joint_prior, density_estimator=setup_density_estimator(trainer_dir, conf, round_id))
 
         if (
@@ -333,42 +295,60 @@ if __name__ == "__main__":
             print(
                 f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training network for round {round_id}"
             )
-            sampled_data = joint_prior.sample((100,))
-            obs = (
-                    {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
-                )
-            def pad_to_width(t, target_width):
-                current_width = t.shape[1]
+            
+            def pad_to_width(t, target_width, i):
+                current_width = t.shape[i]
                 if current_width < target_width:
                     pad_amount = target_width - current_width
                     return F.pad(t, (0, pad_amount))
                 return t   
 
-            def pad_to_length(t, target_length):
-                current_length = t.shape[0]
+            def pad_to_length(t, target_length, i):
+                current_length = t.shape[i]
                 if current_length < target_length:
                     pad_amount = target_length - current_length
                     return F.pad(t, (0,0,0,pad_amount))
-                return t    
-            obs["d_t"] = pad_to_length(obs["d_t"], 6) 
-            obs["n_t"] = pad_to_length(obs["n_t"], 6)
-            obs["d_f"] = pad_to_width(obs["d_f"], 8192)
-            obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192)
-            obs["n_f"] = pad_to_width(obs["n_f"], 8192)
-            obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192) 
-             
+                return t  
+
+            obs = (
+                    {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
+                )
+
+            for sample in itertools.islice(train_data, 1):
+                training_example = sample            
+            
+            training_example =   (
+                    {key: torch.tensor(training_example[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
+                )            
+            theta = training_example["z_total"]
+
+            
+            training_example["d_t"] = pad_to_length(training_example["d_t"], 6, 1) 
+            training_example["n_t"] = pad_to_length(training_example["n_t"], 6, 1)
+            training_example["d_f"] = pad_to_width(training_example["d_f"], 8192, 2)
+            training_example["d_f_w"] = pad_to_width(training_example["d_f_w"], 8192, 2)
+            training_example["n_f"] = pad_to_width(training_example["n_f"], 8192, 2)
+            training_example["n_f_w"] = pad_to_width(training_example["n_f_w"], 8192, 2)     
+
+            obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
+            obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
+            obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
+            obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
+            obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
+            obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
+
+            # Turn the training_example dictionary into a list of tensors
+            training_example = [training_example[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+            training_example = torch.cat(training_example, dim=2)
+
             #Turn the obs dictionary into a list of tensors
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
             obs = torch.cat(obs, dim=1)
-            obs = obs.unsqueeze(0)
-            obs = obs.repeat(128,1,1)
-            # Find the true theta values 
-            theta_list = [sample["z_total"][0,:] for sample in itertools.islice(train_data, 128)]
-            theta = [torch.tensor(elem) for elem in theta_list]
-            theta = torch.stack(theta, dim=0)
+            
             # Train the density estimator
-            density_estimator = inference.append_simulations(theta, obs).train()            
+            density_estimator = inference.append_simulations(theta, training_example).train()            
             posterior = inference.build_posterior(density_estimator)
+
             # Plot posterior
             posterior_samples = posterior.sample_batched(torch.Size([1000]), x=obs)            
             for i in range(15):
@@ -377,7 +357,7 @@ if __name__ == "__main__":
                 plt.axvline(x=theta[0,i].item(), linestyle='--', label="True parameter value")
                 plt.xlabel("Theta")
                 plt.ylabel("Density")
-                plt.title("Posterior Distribution")
+                plt.title(f"Posterior Distribution for the parameter {order[i]}")
                 plt.legend()
                 plt.show()
             logging.info(
