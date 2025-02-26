@@ -31,13 +31,13 @@ from sbi.utils import BoxUniform
 import itertools
 import torch.nn.functional as F
 
-
 # For parallelisation
 import subprocess
 import psutil
 import logging
 
 import matplotlib.pyplot as plt
+
 
 class SineDistribution(dist.Distribution):
     """
@@ -322,7 +322,6 @@ if __name__ == "__main__":
                 )            
             theta = training_example["z_total"]
 
-            
             training_example["d_t"] = pad_to_length(training_example["d_t"], 6, 1) 
             training_example["n_t"] = pad_to_length(training_example["n_t"], 6, 1)
             training_example["d_f"] = pad_to_width(training_example["d_f"], 8192, 2)
@@ -346,9 +345,9 @@ if __name__ == "__main__":
             obs = torch.cat(obs, dim=1)
             
             # Train the density estimator
-            density_estimator = inference.append_simulations(theta, training_example).train()            
+            density_estimator = inference.append_simulations(theta, training_example).train()
+            print(f"The loss is {density_estimator.loss(theta, training_example).mean()}")    
             posterior = inference.build_posterior(density_estimator)
-
             # Plot posterior
             posterior_samples = posterior.sample_batched(torch.Size([1000]), x=obs)            
             for i in range(15):
@@ -367,9 +366,6 @@ if __name__ == "__main__":
         print(
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Generate posterior samples"
         )
-        posterior = inference.build_posterior(density_estimator)
-        obs = torch.tensor(joint_prior.sample((1,)))
-        posterior_samples = posterior.sample(torch.Size([100]), x=obs)
 
         save_bounds(bounds, conf, round_id)
         end_time = datetime.now()

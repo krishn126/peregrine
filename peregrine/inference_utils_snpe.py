@@ -10,18 +10,6 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 import swyft.lightning as sl
 from sbi.inference import SNPE
 from sbi.utils.get_nn_models import posterior_nn
-import wandb
-
-wandb.init(
-    project="Peregrine - SNPE Inference",
-    # track hyperparameters and run metadata
-    config={
-        "learning_rate": 0.01,
-        "architecture": "CNN",
-        "dataset": "CIFAR-100",
-        "epochs": 10,
-    },
-)
 
 class InferenceNetwork(sl.SwyftModule):
     def __init__(self, conf):
