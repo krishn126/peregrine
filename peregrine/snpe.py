@@ -23,10 +23,8 @@ from inference_utils_snpe import (
     load_bounds,
 )
 from sbi.inference import SNPE
-from sbi.utils.get_nn_models import posterior_nn
 import torch
 import torch.distributions as dist
-from sbi.utils import MultipleIndependent
 from sbi.utils import BoxUniform
 import itertools
 import torch.nn.functional as F
