@@ -45,23 +45,20 @@ class InferenceNetwork(sl.SwyftModule):
         self.optimizer_init = sl.AdamOptimizerInit(lr=conf["hparams"]["learning_rate"])
 
     def forward(self, x):
-        # if self.noise_shuffling and A["d_t"].size(0) != 1:
-        #     noise_shuffling = torch.randperm(self.batch_size)
-        #     d_t = A["d_t"] + A["n_t"][noise_shuffling]
-        #     d_f_w = A["d_f_w"] + A["n_f_w"][noise_shuffling]
-        # else:
-        #     d_t = A["d_t"] + A["n_t"]
-        #     d_f_w = A["d_f_w"] + A["n_f_w"]
-        # make the first 8192 values of x the time domain data
-        #define the elements between 16386, 24578 to be n_t
+        
         n_t = x[:, :3, 24576:32768]
         n_f_w = x[:, :, 40960:45057]
         d_t = x[:, :3, 0:8192]
         d_f_w = x[:, :, 16384:20481]
-        
-        d_t = d_t + n_t
-        d_f_w = d_f_w + n_f_w
-       
+
+        if self.noise_shuffling and d_t.size(0) != 1:
+            noise_shuffling = torch.randperm(self.batch_size)
+            d_t = d_t + n_t[noise_shuffling]
+            d_f_w = d_f_w + n_f_w[noise_shuffling]
+        else:
+            d_t = d_t + n_t
+            d_f_w = d_f_w + n_f_w
+                     
         d_t = self.unet_t(d_t)
         d_f_w = self.unet_f(d_f_w)
 
