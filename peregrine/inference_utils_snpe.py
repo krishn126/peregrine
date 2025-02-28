@@ -50,9 +50,11 @@ class InferenceNetwork(sl.SwyftModule):
         n_f_w = x[:, :, 40960:45057]
         d_t = x[:, :3, 0:8192]
         d_f_w = x[:, :, 16384:20481]
+        
+        training_batch_size = n_t.size(0)
 
         if self.noise_shuffling and d_t.size(0) != 1:
-            noise_shuffling = torch.randperm(self.batch_size)
+            noise_shuffling = torch.randperm(training_batch_size)
             d_t = d_t + n_t[noise_shuffling]
             d_f_w = d_f_w + n_f_w[noise_shuffling]
         else:

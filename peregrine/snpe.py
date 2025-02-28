@@ -311,9 +311,10 @@ if __name__ == "__main__":
             obs = (
                     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
                 )
-
+            
             for sample in itertools.islice(train_data, 1):
-                training_example = sample            
+                #create a list called training_example that appends the samples      
+                training_example = sample   
             
             training_example =   (
                     {key: torch.tensor(training_example[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
@@ -343,11 +344,12 @@ if __name__ == "__main__":
             obs = torch.cat(obs, dim=1)
             
             # Train the density estimator
-            density_estimator = inference.append_simulations(theta, training_example).train()
+            density_estimator = inference.append_simulations(theta, training_example).train(training_batch_size=128)
             print(f"The loss is {density_estimator.loss(theta, training_example).mean()}")    
             posterior = inference.build_posterior(density_estimator)
             # Plot posterior
-            posterior_samples = posterior.sample_batched(torch.Size([1000]), x=obs)            
+            posterior_samples = posterior.sample_batched(torch.Size([1000]), x=obs)   
+                     
             for i in range(15):
                 plt.figure(figsize=(8, 5))
                 plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
