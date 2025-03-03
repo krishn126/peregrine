@@ -35,6 +35,7 @@ import psutil
 import logging
 
 import matplotlib.pyplot as plt
+import os
 
 
 class SineDistribution(dist.Distribution):
@@ -358,7 +359,8 @@ if __name__ == "__main__":
                 plt.ylabel("Density")
                 plt.title(f"Posterior Distribution for the parameter {order[i]}")
                 plt.legend()
-                plt.show()
+                plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight')        
+
         #     logging.info(
         #         f"Training completed for round {round_id}, checkpoint available at {glob.glob(f'{trainer_dir}/epoch*_R{round_id}.ckpt')[0]}"
         #     )
