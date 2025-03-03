@@ -359,17 +359,17 @@ if __name__ == "__main__":
                 plt.title(f"Posterior Distribution for the parameter {order[i]}")
                 plt.legend()
                 plt.show()
-            logging.info(
-                f"Training completed for round {round_id}, checkpoint available at {glob.glob(f'{trainer_dir}/epoch*_R{round_id}.ckpt')[0]}"
-            )
+        #     logging.info(
+        #         f"Training completed for round {round_id}, checkpoint available at {glob.glob(f'{trainer_dir}/epoch*_R{round_id}.ckpt')[0]}"
+        #     )
 
-        print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Generate posterior samples"
-        )
+        # print(
+        #     f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Generate posterior samples"
+        # )
 
-        save_bounds(bounds, conf, round_id)
-        end_time = datetime.now()
-        logging.info(f"Completed round {round_id}")
-        print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Completed round {round_id} in {end_time - start_time}."
-        )
+        # save_bounds(bounds, conf, round_id)
+        # end_time = datetime.now()
+        # logging.info(f"Completed round {round_id}")
+        # print(
+        #     f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Completed round {round_id} in {end_time - start_time}."
+        # )
