@@ -281,6 +281,26 @@ if __name__ == "__main__":
             "geocent_time",
         ]
 
+        true_params = [
+            39.53573995392598,
+            34.8722208102226,
+            0.8857620985418904,
+            32.136969061169324,
+            900,
+            0.07084716171380845,
+            5.555599820502261,
+            0.44320777946320117,
+            1.0995170458005799,
+            5.089358282766109,
+            1.4974326044527126,
+            1.1019600169566186,
+            0.9701993491043245,
+            0.8117959745751914,
+            6.220246980963511,
+            1.884805935473119,
+            0.0
+        ]
+
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
 
@@ -357,12 +377,12 @@ if __name__ == "__main__":
             print(f"The loss is {density_estimator.loss(theta, training_example).mean()}")    
             posterior = inference.build_posterior(density_estimator)
             # Plot posterior
-            posterior_samples = posterior.sample_batched(torch.Size([1000]), x=obs)   
+            posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
                      
             for i in range(15):
                 plt.figure(figsize=(8, 5))
                 plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
-                plt.axvline(x=theta[0,i].item(), linestyle='--', label="True parameter value")
+                plt.axvline(x=true_params[i].item(), linestyle='--', label="True parameter value")
                 plt.xlabel("Theta")
                 plt.ylabel("Density")
                 plt.title(f"Posterior Distribution for the parameter {order[i]}")
