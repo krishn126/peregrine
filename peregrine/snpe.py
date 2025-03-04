@@ -317,7 +317,7 @@ if __name__ == "__main__":
                 #create a list called training_example that appends the samples      
                 training_example = sample   
             
-            print(sample)
+            print(training_example.shape)
             sys.exit()
             training_example =   (
                     {key: torch.tensor(training_example[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
