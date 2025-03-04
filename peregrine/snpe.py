@@ -347,8 +347,7 @@ if __name__ == "__main__":
             # Turn the training example list into a single tensor
             training_example = torch.cat(training_example, dim=0)
             theta = torch.cat(theta, dim = 0)
-            print(training_example.shape)
-            print(theta.shape)
+            
             #Turn the obs dictionary into a list of tensors
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
             obs = torch.cat(obs, dim=1)
