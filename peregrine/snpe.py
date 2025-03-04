@@ -313,11 +313,12 @@ if __name__ == "__main__":
                     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
                 )
             
-            for sample in itertools.islice(train_data, 1):
+            training_example = []
+            for sample in itertools.islice(train_data, 2):
                 #create a list called training_example that appends the samples      
-                training_example = sample   
-            
-            print(training_example.size())
+                training_example.append(sample)
+
+            print(len(training_example))
             sys.exit()
             training_example =   (
                     {key: torch.tensor(training_example[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
