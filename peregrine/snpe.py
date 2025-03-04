@@ -371,7 +371,7 @@ if __name__ == "__main__":
             obs = torch.cat(obs, dim=1)
             
             # Train the density estimator
-            density_estimator = inference.append_simulations(theta, training_example).train(training_batch_size=128, max_num_epochs=10)
+            density_estimator = inference.append_simulations(theta, training_example).train(training_batch_size=128)
             print(f"The loss is {density_estimator.loss(theta, training_example).mean()}")    
             posterior = inference.build_posterior(density_estimator)
             # Plot posterior
