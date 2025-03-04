@@ -345,8 +345,8 @@ if __name__ == "__main__":
                 training_example[i] = torch.cat(training_example[i], dim=2)
 
             # Turn the training example list into a single tensor
-            training_example = torch.stack(training_example)
-            theta = torch.stack(theta)
+            training_example = torch.cat(training_example, dim=0)
+            theta = torch.cat(theta, dim = 0)
             print(training_example.shape)
             print(theta.shape)
             sys.exit()
