@@ -376,7 +376,6 @@ if __name__ == "__main__":
             posterior = inference.build_posterior(density_estimator)
             # Plot posterior
             posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
-            print(posterior_samples.shape)         
             for i in range(15):
                 plt.figure(figsize=(8, 5))
                 plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
