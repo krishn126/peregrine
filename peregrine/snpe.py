@@ -349,8 +349,6 @@ if __name__ == "__main__":
             theta = torch.cat(theta, dim = 0)
             print(training_example.shape)
             print(theta.shape)
-            sys.exit()
-
             #Turn the obs dictionary into a list of tensors
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
             obs = torch.cat(obs, dim=1)
