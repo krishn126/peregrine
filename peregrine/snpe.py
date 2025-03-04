@@ -314,23 +314,10 @@ if __name__ == "__main__":
                 )
             
             training_example = []
+            theta = []
             for sample in itertools.islice(train_data, 2):
                 #create a list called training_example that appends the samples      
                 training_example.append(sample)
-
-            print(len(training_example))
-            sys.exit()
-            training_example =   (
-                    {key: torch.tensor(training_example[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
-                )            
-            theta = training_example["z_total"]
-
-            training_example["d_t"] = pad_to_length(training_example["d_t"], 6, 1) 
-            training_example["n_t"] = pad_to_length(training_example["n_t"], 6, 1)
-            training_example["d_f"] = pad_to_width(training_example["d_f"], 8192, 2)
-            training_example["d_f_w"] = pad_to_width(training_example["d_f_w"], 8192, 2)
-            training_example["n_f"] = pad_to_width(training_example["n_f"], 8192, 2)
-            training_example["n_f_w"] = pad_to_width(training_example["n_f_w"], 8192, 2)     
 
             obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
             obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
@@ -339,9 +326,30 @@ if __name__ == "__main__":
             obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
             obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
 
-            # Turn the training_example dictionary into a list of tensors
-            training_example = [training_example[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-            training_example = torch.cat(training_example, dim=2)
+            for i in range(len(training_example)):
+                training_example[i] =   (
+                        {key: torch.tensor(training_example[i][key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
+                    )            
+                theta.append(training_example[i]["z_total"])
+
+                training_example[i]["d_t"] = pad_to_length(training_example[i]["d_t"], 6, 1) 
+                training_example[i]["n_t"] = pad_to_length(training_example[i]["n_t"], 6, 1)
+                training_example[i]["d_f"] = pad_to_width(training_example[i]["d_f"], 8192, 2)
+                training_example[i]["d_f_w"] = pad_to_width(training_example[i]["d_f_w"], 8192, 2)
+                training_example[i]["n_f"] = pad_to_width(training_example[i]["n_f"], 8192, 2)
+                training_example[i]["n_f_w"] = pad_to_width(training_example[i]["n_f_w"], 8192, 2)     
+
+            
+                # Turn the training_example dictionary into a list of tensors
+                training_example[i] = [training_example[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+                training_example[i] = torch.cat(training_example, dim=2)
+
+            # Turn the training example list into a single tensor
+            training_example = torch.stack(training_example)
+            theta = torch.stack(theta)
+            print(training_example.shape)
+            print(theta.shape)
+            sys.exit()
 
             #Turn the obs dictionary into a list of tensors
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
