@@ -382,7 +382,7 @@ if __name__ == "__main__":
             for i in range(15):
                 plt.figure(figsize=(8, 5))
                 plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
-                plt.axvline(x=true_params[i].item(), linestyle='--', label="True parameter value")
+                plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
                 plt.xlabel("Theta")
                 plt.ylabel("Density")
                 plt.title(f"Posterior Distribution for the parameter {order[i]}")
