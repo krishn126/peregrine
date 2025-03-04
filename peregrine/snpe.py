@@ -341,8 +341,8 @@ if __name__ == "__main__":
 
             
                 # Turn the training_example dictionary into a list of tensors
-                training_example[i] = [training_example[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-                training_example[i] = torch.cat(training_example, dim=2)
+                training_example[i] = [training_example[i][key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+                training_example[i] = torch.cat(training_example[i], dim=2)
 
             # Turn the training example list into a single tensor
             training_example = torch.stack(training_example)
