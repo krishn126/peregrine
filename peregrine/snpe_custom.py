@@ -412,7 +412,7 @@ if __name__ == "__main__":
                         step += 1
                         pbar.set_postfix(
                             {
-                                "Train Loss": f"{loss.item():.4f}"
+                                "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
                             }
                         ) # print to tqdm bar
                 # avg_train_loss = train_loss_epoch / num_batches
