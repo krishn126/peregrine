@@ -390,8 +390,8 @@ if __name__ == "__main__":
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i in range(len(training_example[0])):
-                        theta = theta[i,:]
-                        x = training_example[i,:,:]
+                        theta = theta[i,:].unsqueeze(0)
+                        x = training_example[i,:,:].unsqueeze(0)
                         print(x.shape)
                         print(theta.shape)
                         loss = density_estimator.loss(theta, x).mean() # compute loss on batch
