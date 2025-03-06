@@ -389,9 +389,9 @@ if __name__ == "__main__":
                     training_example, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for i in range(pbar.size(0)):
-                        theta = theta[i]
-                        x = training_example[i]
+                    for i in range(len(training_example[0])):
+                        theta = theta[i,:]
+                        x = training_example[i,:,:]
                         loss = density_estimator.loss(theta, x).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
