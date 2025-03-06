@@ -390,9 +390,8 @@ if __name__ == "__main__":
             step = 0
             epoch_val_loss = 0.0
 
-            count = sum(1 for _ in train_data)
-            print(f"Total number of elements: {count}")
-            sys.exit()
+            num_train_batches = sum(1 for _ in train_data)
+            num_val_batches = sum(1 for _ in val_data)
 
             # Train the density estimator
             for epoch in range(num_epochs):
@@ -419,7 +418,7 @@ if __name__ == "__main__":
                                 "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
                             }
                         ) # print to tqdm bar
-                # avg_train_loss = train_loss_epoch / num_batches
+                avg_train_loss = train_loss_epoch / num_train_batches
 
                 density_estimator.eval() # put estimator into eval mode
 
@@ -430,7 +429,7 @@ if __name__ == "__main__":
                         x_val = get_data(sample)   # iterate through validation dataloader
                         epoch_val_loss += density_estimator.loss(theta_val, x_val).mean().item() # compute overall loss on val dataset batch by batch
 
-                # epoch_val_loss /= len(val_data) # average loss over val dataset        
+                epoch_val_loss /= num_val_batches # average loss over val dataset        
                 scheduler.step(epoch_val_loss)
                 wandb.log(
                     {
