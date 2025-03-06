@@ -333,9 +333,15 @@ if __name__ == "__main__":
             
             training_example = []
             theta = []
+
+            for sample in train_data:
+                print(sample)
+                sys.exit(1)
+
             for sample in itertools.islice(train_data, 10):
                 #create a list called training_example that appends the samples      
                 training_example.append(sample)
+
 
             obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
             obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
