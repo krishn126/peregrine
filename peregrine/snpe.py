@@ -334,10 +334,6 @@ if __name__ == "__main__":
             training_example = []
             theta = []
 
-            for sample in train_data:
-                print(sample)
-                sys.exit(1)
-
             for sample in itertools.islice(train_data, 10):
                 #create a list called training_example that appends the samples      
                 training_example.append(sample)
