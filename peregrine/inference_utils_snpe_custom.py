@@ -9,7 +9,7 @@ from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 import swyft.lightning as sl
 from sbi.inference import SNPE
-from sbi.neural_nets.net_builders import build_nsf
+from sbi.neural_nets.net_builders import build_nsf, build_maf
 
 class InferenceNetwork(sl.SwyftModule):
     def __init__(self, conf):
@@ -251,9 +251,10 @@ def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int, dummy_t
     hparams = conf["hparams"]
 
     embedding_net = init_network(conf)
-    density_estimator = build_nsf(
-        dummy_theta,
-        dummy_x,
+    density_estimator = build_maf(
+        num_params = 15,
+        batch_norm = True,
+        num_transforms = 5,
         embedding_net = embedding_net,
     )
     # current_lr = optimizer.param_groups[0]["lr"]  
