@@ -431,11 +431,12 @@ if __name__ == "__main__":
 
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
                 scheduler.step(epoch_val_loss)
+                learning_rate = scheduler.get_last_lr()
                 wandb.log(
                     {
                         "val_loss": epoch_val_loss,
                         "step": step,
-                        "learning_rate": scheduler.get_last_lr(),
+                        "learning_rate": learning_rate,
                     }
                 ) # log results
 
