@@ -332,51 +332,74 @@ if __name__ == "__main__":
                     return F.pad(t, (0,0,0,pad_amount))
                 return t  
 
-            obs = (
-                    {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
-                )
+            def get_theta(d):
+                d =   (
+                        {key: torch.tensor(d[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
+                    ) 
+                return d["z_total"]
             
-            training_example = []
-            theta = []
+            def get_data(d):
+                d =   (
+                        {key: torch.tensor(d[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
+                    )       
+                d["d_t"] = pad_to_length(d["d_t"], 6, 0) 
+                d["n_t"] = pad_to_length(d["n_t"], 6, 0)
+                d["d_f"] = pad_to_width(d["d_f"], 8192, 1)
+                d["d_f_w"] = pad_to_width(d["d_f_w"], 8192, 1)
+                d["n_f"] = pad_to_width(d["n_f"], 8192, 1)
+                d["n_f_w"] = pad_to_width(d["n_f_w"], 8192, 1)
 
-            for sample in itertools.islice(train_data, 10):
-                #create a list called training_example that appends the samples      
-                training_example.append(sample)
+                d = [d[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+                d = torch.cat(d, dim=1)
+
+                return d
+            
+            # obs = (
+            #         {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
+            #     )
+            
+            # training_example = []
+            # theta = []
+
+            # for sample in itertools.islice(train_data, 10):
+            #     #create a list called training_example that appends the samples      
+            #     training_example.append(sample)
 
 
-            obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
-            obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
-            obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
-            obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
-            obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
-            obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
+            # obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
+            # obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
+            # obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
+            # obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
+            # obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
+            # obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
 
-            for i in range(len(training_example)):
-                training_example[i] =   (
-                        {key: torch.tensor(training_example[i][key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
-                    )            
-                theta.append(training_example[i]["z_total"])
+            # for i in range(len(training_example)):
+            #     training_example[i] =   (
+            #             {key: torch.tensor(training_example[i][key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
+            #         )            
+            #     theta.append(training_example[i]["z_total"])
 
-                training_example[i]["d_t"] = pad_to_length(training_example[i]["d_t"], 6, 1) 
-                training_example[i]["n_t"] = pad_to_length(training_example[i]["n_t"], 6, 1)
-                training_example[i]["d_f"] = pad_to_width(training_example[i]["d_f"], 8192, 2)
-                training_example[i]["d_f_w"] = pad_to_width(training_example[i]["d_f_w"], 8192, 2)
-                training_example[i]["n_f"] = pad_to_width(training_example[i]["n_f"], 8192, 2)
-                training_example[i]["n_f_w"] = pad_to_width(training_example[i]["n_f_w"], 8192, 2)     
+            #     training_example[i]["d_t"] = pad_to_length(training_example[i]["d_t"], 6, 1) 
+            #     training_example[i]["n_t"] = pad_to_length(training_example[i]["n_t"], 6, 1)
+            #     training_example[i]["d_f"] = pad_to_width(training_example[i]["d_f"], 8192, 2)
+            #     training_example[i]["d_f_w"] = pad_to_width(training_example[i]["d_f_w"], 8192, 2)
+            #     training_example[i]["n_f"] = pad_to_width(training_example[i]["n_f"], 8192, 2)
+            #     training_example[i]["n_f_w"] = pad_to_width(training_example[i]["n_f_w"], 8192, 2)     
 
             
-                # Turn the training_example dictionary into a list of tensors
-                training_example[i] = [training_example[i][key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-                training_example[i] = torch.cat(training_example[i], dim=2)
+            #     # Turn the training_example dictionary into a list of tensors
+            #     training_example[i] = [training_example[i][key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+            #     training_example[i] = torch.cat(training_example[i], dim=2)
 
-            # Turn the training example list into a single tensor
-            training_example = torch.cat(training_example, dim=0)
-            theta = torch.cat(theta, dim = 0)
+            # # Turn the training example list into a single tensor
+            # training_example = torch.cat(training_example, dim=0)
+            # theta = torch.cat(theta, dim = 0)
             
-            #Turn the obs dictionary into a list of tensors
-            obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-            obs = torch.cat(obs, dim=1)
-            
+            # #Turn the obs dictionary into a list of tensors
+            # obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+            # obs = torch.cat(obs, dim=1)
+
+            obs = get_data(obs)
             # num_epochs = conf["hyperparams"]["num_epochs"]
             num_epochs = 10
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
@@ -386,12 +409,12 @@ if __name__ == "__main__":
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    range(len(training_example)), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    train_data, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for i in pbar:
-                        theta_train = theta[i,:].unsqueeze(0)
-                        x_train = training_example[i,:,:].unsqueeze(0)
+                    for sample in pbar:
+                        theta_train = get_theta(sample)
+                        x_train = get_data(sample)
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
