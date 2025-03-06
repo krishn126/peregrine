@@ -16,17 +16,14 @@ import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator, simulate
 from inference_utils_snpe_custom import (
-    init_network,
     setup_zarr_store,
     setup_dataloader,
     setup_density_estimator,
-    save_bounds,
     load_bounds,
 )
 from sbi.inference import SNPE
 import torch
 import torch.distributions as dist
-from sbi.utils import BoxUniform
 from sbi.inference.posteriors import DirectPosterior
 import torch.nn.functional as F
 
@@ -36,7 +33,6 @@ import psutil
 import logging
 
 import matplotlib.pyplot as plt
-import os
 import tqdm
 import wandb
 from torch.optim import AdamW
@@ -399,10 +395,10 @@ if __name__ == "__main__":
                 train_loss_epoch = 0.0
                 # num_batches = len(train_data)
                 with tqdm.tqdm(
-                    train_data, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total=209, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for sample in pbar:
+                    for sample in train_data:
                         theta_train = get_theta(sample)
                         x_train = get_data(sample)
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
@@ -413,6 +409,7 @@ if __name__ == "__main__":
                         train_loss_epoch += loss.item()
                         wandb.log({"train_loss": loss.item()}) # log loss to wandb
                         step += 1
+                        pbar.update(1)  #Update the progress bar
                         pbar.set_postfix(
                             {
                                 "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
