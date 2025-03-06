@@ -207,7 +207,7 @@ def setup_dataloader(store, simulator, conf: dict, round_id: int = None):
     return train_data, val_data, trainer_dir
 
 
-def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int, dummy_theta, dummy_x):
+def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int):
     """
     Initialise a pytorch lightning trainer and relevant directories
     Args:
