@@ -27,7 +27,7 @@ from sbi.inference import SNPE
 import torch
 import torch.distributions as dist
 from sbi.utils import BoxUniform
-import itertools
+from sbi.inference.posteriors import DirectPosterior
 import torch.nn.functional as F
 
 # For parallelisation
@@ -384,7 +384,7 @@ if __name__ == "__main__":
             obs = torch.cat(obs, dim=1)
 
             # num_epochs = conf["hyperparams"]["num_epochs"]
-            num_epochs = 10
+            num_epochs = 3
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
@@ -436,15 +436,15 @@ if __name__ == "__main__":
                     }
                 ) # log results
 
-            # posterior = inference.build_posterior(density_estimator)
-            # # Plot posterior
-            # posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
-            # for i in range(15):
-            #     plt.figure(figsize=(8, 5))
-            #     plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
-            #     plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
-            #     plt.xlabel("Theta")
-            #     plt.ylabel("Density")
-            #     plt.title(f"Posterior Distribution for the parameter {order[i]}")
-            #     plt.legend()
-            #     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight')        
+            posterior = DirectPosterior(density_estimator, joint_prior)
+            # Plot posterior
+            posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
+            for i in range(15):
+                plt.figure(figsize=(8, 5))
+                plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
+                plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
+                plt.xlabel("Theta")
+                plt.ylabel("Density")
+                plt.title(f"Posterior Distribution for the parameter {order[i]}")
+                plt.legend()
+                plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight')        
