@@ -15,7 +15,7 @@ import pickle
 import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator, simulate
-from inference_utils_snpe import (
+from inference_utils_snpe_custom import (
     init_network,
     setup_zarr_store,
     setup_dataloader,
@@ -308,9 +308,7 @@ if __name__ == "__main__":
         dummy_theta = joint_prior.sample(torch.Size([64]))  # Sample 64 thetas
         dummy_x = torch.randn(64, 6, 49152)
         # Define the inference object
-        density_estimator = setup_density_estimator(trainer_dir, conf, round_id)
-        embedding_net = init_network(conf)
-        density_estimator = density_estimator(dummy_theta, dummy_x, embedding_net)
+        density_estimator = setup_density_estimator(trainer_dir, conf, round_id, dummy_theta, dummy_x)
         
         if (
             not conf["snpe"]["infer_only"]
