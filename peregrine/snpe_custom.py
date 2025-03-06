@@ -354,9 +354,9 @@ if __name__ == "__main__":
 
                 return d
             
-            # obs = (
-            #         {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
-            #     )
+            obs = (
+                    {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
+                )
             
             # training_example = []
             # theta = []
@@ -366,12 +366,12 @@ if __name__ == "__main__":
             #     training_example.append(sample)
 
 
-            # obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
-            # obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
-            # obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
-            # obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
-            # obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
-            # obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
+            obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
+            obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
+            obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
+            obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
+            obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
+            obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
 
             # for i in range(len(training_example)):
             #     training_example[i] =   (
@@ -396,10 +396,9 @@ if __name__ == "__main__":
             # theta = torch.cat(theta, dim = 0)
             
             # #Turn the obs dictionary into a list of tensors
-            # obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-            # obs = torch.cat(obs, dim=1)
+            obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+            obs = torch.cat(obs, dim=1)
 
-            obs = get_data(obs)
             # num_epochs = conf["hyperparams"]["num_epochs"]
             num_epochs = 10
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
