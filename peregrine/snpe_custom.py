@@ -342,27 +342,21 @@ if __name__ == "__main__":
                 d =   (
                         {key: torch.tensor(d[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
                     )       
-                d["d_t"] = pad_to_length(d["d_t"], 6, 0) 
-                d["n_t"] = pad_to_length(d["n_t"], 6, 0)
-                d["d_f"] = pad_to_width(d["d_f"], 8192, 1)
-                d["d_f_w"] = pad_to_width(d["d_f_w"], 8192, 1)
-                d["n_f"] = pad_to_width(d["n_f"], 8192, 1)
-                d["n_f_w"] = pad_to_width(d["n_f_w"], 8192, 1)
+                d["d_t"] = pad_to_length(d["d_t"], 6, 1) 
+                d["n_t"] = pad_to_length(d["n_t"], 6, 1)
+                d["d_f"] = pad_to_width(d["d_f"], 8192, 2)
+                d["d_f_w"] = pad_to_width(d["d_f_w"], 8192, 2)
+                d["n_f"] = pad_to_width(d["n_f"], 8192, 2)
+                d["n_f_w"] = pad_to_width(d["n_f_w"], 8192, 2)
 
                 d = [d[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-                d = torch.cat(d, dim=1)
+                d = torch.cat(d, dim=2)
 
                 return d
             
             obs = (
                     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
                 )
-            
-            for sample in train_data:
-                print(sample.keys())
-                print(sample["d_t"].shape)
-                print(sample["d_f"].shape)
-                sys.exit(1)
 
             obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
             obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
