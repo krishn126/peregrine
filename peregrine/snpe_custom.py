@@ -307,6 +307,9 @@ if __name__ == "__main__":
 
         # Define the inference object
         density_estimator = setup_density_estimator(trainer_dir, conf, round_id)
+        num_parameters = 15
+        density_estimator = density_estimator(num_parameters)
+        
         
         if (
             not conf["snpe"]["infer_only"]
