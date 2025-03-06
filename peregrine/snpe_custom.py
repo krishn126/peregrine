@@ -358,13 +358,11 @@ if __name__ == "__main__":
                     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
                 )
             
-            # training_example = []
-            # theta = []
-
-            # for sample in itertools.islice(train_data, 10):
-            #     #create a list called training_example that appends the samples      
-            #     training_example.append(sample)
-
+            for sample in train_data:
+                print(sample.keys())
+                print(sample["d_t"].shape)
+                print(sample["d_f"].shape)
+                sys.exit(1)
 
             obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
             obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
