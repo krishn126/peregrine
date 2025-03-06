@@ -389,7 +389,7 @@ if __name__ == "__main__":
                     training_example, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for i in range(len(pbar[0])):
+                    for i in pbar:
                         theta_train = theta[i,:].unsqueeze(0)
                         x_train = training_example[i,:,:].unsqueeze(0)
                         print(x_train.shape)
