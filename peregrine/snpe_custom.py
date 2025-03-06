@@ -399,7 +399,7 @@ if __name__ == "__main__":
                         # train_losses.append(loss.item()) # track losses
                         train_loss_epoch += loss.item()
                         wandb.log({"train_loss": loss.item()}) # log loss to wandb
-                        step += 1
+                        # step += 1
                         pbar.set_postfix(
                             {
                                 "Train Loss": f"{loss.item():.4f}"
