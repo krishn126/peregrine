@@ -304,13 +304,11 @@ if __name__ == "__main__":
 
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
-
+        dummy_theta = joint_prior.sample(torch.Size([64]))  # Sample 64 thetas
+        dummy_x = torch.randn(64, 6, 49152)
         # Define the inference object
         density_estimator = setup_density_estimator(trainer_dir, conf, round_id)
-        num_parameters = 15
-        input_dim = 6
-        density_estimator = density_estimator(num_parameters, input_dim)
-        
+        density_estimator = density_estimator(dummy_theta, dummy_x)
         
         if (
             not conf["snpe"]["infer_only"]
