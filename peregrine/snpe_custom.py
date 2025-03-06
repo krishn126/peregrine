@@ -36,8 +36,9 @@ import logging
 
 import matplotlib.pyplot as plt
 import os
-
+import tqdm
 import wandb
+from torch.optim import AdamW
 
 class SineDistribution(dist.Distribution):
     """
@@ -307,8 +308,6 @@ if __name__ == "__main__":
         # Define the inference object
         density_estimator = setup_density_estimator(trainer_dir, conf, round_id)
         
-        inference = SNPE(prior=joint_prior, density_estimator=setup_density_estimator(trainer_dir, conf, round_id))
-
         if (
             not conf["snpe"]["infer_only"]
             or len(glob.glob(f"{trainer_dir}/epoch*_R{round_id}.ckpt")) == 0
@@ -337,10 +336,6 @@ if __name__ == "__main__":
             
             training_example = []
             theta = []
-
-            for sample in train_data:
-                print(sample)
-                sys.exit(1)
 
             for sample in itertools.islice(train_data, 10):
                 #create a list called training_example that appends the samples      
@@ -380,18 +375,43 @@ if __name__ == "__main__":
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
             obs = torch.cat(obs, dim=1)
             
+            # num_epochs = conf["hyperparams"]["num_epochs"]
+            num_epochs = 10
+            optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
+
             # Train the density estimator
-            density_estimator = inference.append_simulations(theta, training_example).train(training_batch_size=128)
-            print(f"The loss is {density_estimator.loss(theta, training_example).mean()}")    
-            posterior = inference.build_posterior(density_estimator)
-            # Plot posterior
-            posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
-            for i in range(15):
-                plt.figure(figsize=(8, 5))
-                plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
-                plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
-                plt.xlabel("Theta")
-                plt.ylabel("Density")
-                plt.title(f"Posterior Distribution for the parameter {order[i]}")
-                plt.legend()
-                plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight')        
+            for epoch in range(num_epochs):
+                density_estimator.train() # put estimator into train mode
+                train_loss_epoch = 0.0
+                with tqdm.tqdm(
+                    training_example, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                ) as pbar: # Fancy tqdm loading bar for printing the training status
+                        #iterate through the training examples
+                    for i in range(pbar.size(0)):
+                        theta = theta[i]
+                        x = training_example[i]
+                        loss = density_estimator.loss(theta, x).mean() # compute loss on batch
+                        optimizer.zero_grad() # zero the optimiser
+                        loss.backward() # compute the gradients
+                        optimizer.step() # take a step given these gradients
+                        # train_losses.append(loss.item()) # track losses
+                        # train_loss_epoch += loss.item()
+                        wandb.log({"train_loss": loss.item()}) # log loss to wandb
+                        # step += 1
+                        pbar.set_postfix(
+                            {
+                                "Train Loss": f"{loss.item():.4f}"
+                            }
+                        ) # print to tqdm bar   
+            # posterior = inference.build_posterior(density_estimator)
+            # # Plot posterior
+            # posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
+            # for i in range(15):
+            #     plt.figure(figsize=(8, 5))
+            #     plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
+            #     plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
+            #     plt.xlabel("Theta")
+            #     plt.ylabel("Density")
+            #     plt.title(f"Posterior Distribution for the parameter {order[i]}")
+            #     plt.legend()
+            #     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight')        
