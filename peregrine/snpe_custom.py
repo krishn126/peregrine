@@ -390,6 +390,10 @@ if __name__ == "__main__":
             step = 0
             epoch_val_loss = 0.0
 
+            count = sum(1 for _ in train_data)
+            print(f"Total number of elements: {count}")
+            sys.exit()
+
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
