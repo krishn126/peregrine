@@ -389,7 +389,7 @@ if __name__ == "__main__":
                     training_example, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for i in range(len(training_example[0])):
+                    for i in range(len(pbar[0])):
                         theta_train = theta[i,:].unsqueeze(0)
                         x_train = training_example[i,:,:].unsqueeze(0)
                         print(x_train.shape)
@@ -399,7 +399,7 @@ if __name__ == "__main__":
                         loss.backward() # compute the gradients
                         optimizer.step() # take a step given these gradients
                         # train_losses.append(loss.item()) # track losses
-                        # train_loss_epoch += loss.item()
+                        train_loss_epoch += loss.item()
                         wandb.log({"train_loss": loss.item()}) # log loss to wandb
                         # step += 1
                         pbar.set_postfix(
