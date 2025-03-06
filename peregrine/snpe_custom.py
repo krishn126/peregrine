@@ -354,6 +354,21 @@ if __name__ == "__main__":
 
                 return d
             
+            def setup_scheduler(optimizer):
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                    optimizer,
+                    mode="min",
+                    factor=0.1,
+                    patience=10,
+                    verbose=True,
+                    threshold=1e-4,
+                    threshold_mode="rel",
+                    cooldown=0,
+                    min_lr=0,
+                    eps=1e-8,
+                )
+                return scheduler
+            
             obs = (
                     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
                 )
@@ -365,35 +380,15 @@ if __name__ == "__main__":
             obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
             obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
 
-            # for i in range(len(training_example)):
-            #     training_example[i] =   (
-            #             {key: torch.tensor(training_example[i][key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w", "z_total"]}
-            #         )            
-            #     theta.append(training_example[i]["z_total"])
-
-            #     training_example[i]["d_t"] = pad_to_length(training_example[i]["d_t"], 6, 1) 
-            #     training_example[i]["n_t"] = pad_to_length(training_example[i]["n_t"], 6, 1)
-            #     training_example[i]["d_f"] = pad_to_width(training_example[i]["d_f"], 8192, 2)
-            #     training_example[i]["d_f_w"] = pad_to_width(training_example[i]["d_f_w"], 8192, 2)
-            #     training_example[i]["n_f"] = pad_to_width(training_example[i]["n_f"], 8192, 2)
-            #     training_example[i]["n_f_w"] = pad_to_width(training_example[i]["n_f_w"], 8192, 2)     
-
-            
-            #     # Turn the training_example dictionary into a list of tensors
-            #     training_example[i] = [training_example[i][key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-            #     training_example[i] = torch.cat(training_example[i], dim=2)
-
-            # # Turn the training example list into a single tensor
-            # training_example = torch.cat(training_example, dim=0)
-            # theta = torch.cat(theta, dim = 0)
-            
-            # #Turn the obs dictionary into a list of tensors
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
             obs = torch.cat(obs, dim=1)
 
             # num_epochs = conf["hyperparams"]["num_epochs"]
             num_epochs = 10
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
+            scheduler = setup_scheduler(optimizer) # initialise scheduler
+            step = 0
+
 
             # Train the density estimator
             for epoch in range(num_epochs):
@@ -413,7 +408,7 @@ if __name__ == "__main__":
                         # train_losses.append(loss.item()) # track losses
                         train_loss_epoch += loss.item()
                         wandb.log({"train_loss": loss.item()}) # log loss to wandb
-                        # step += 1
+                        step += 1
                         pbar.set_postfix(
                             {
                                 "Train Loss": f"{loss.item():.4f}"
