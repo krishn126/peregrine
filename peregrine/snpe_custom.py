@@ -388,7 +388,7 @@ if __name__ == "__main__":
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
-
+            epoch_val_loss = 0.0
 
             # Train the density estimator
             for epoch in range(num_epochs):
@@ -435,7 +435,7 @@ if __name__ == "__main__":
                         "learning_rate": scheduler.get_last_lr(),
                     }
                 ) # log results
-                
+
             # posterior = inference.build_posterior(density_estimator)
             # # Plot posterior
             # posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
