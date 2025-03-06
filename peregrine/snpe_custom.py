@@ -386,14 +386,12 @@ if __name__ == "__main__":
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    training_example, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    range(len(training_example)), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for i in range(len(training_example)):
+                    for i in pbar:
                         theta_train = theta[i,:].unsqueeze(0)
                         x_train = training_example[i,:,:].unsqueeze(0)
-                        print(x_train.shape)
-                        print(theta_train.shape)
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
@@ -401,7 +399,7 @@ if __name__ == "__main__":
                         # train_losses.append(loss.item()) # track losses
                         train_loss_epoch += loss.item()
                         wandb.log({"train_loss": loss.item()}) # log loss to wandb
-                        # step += 1
+                        step += 1
                         pbar.set_postfix(
                             {
                                 "Train Loss": f"{loss.item():.4f}"
