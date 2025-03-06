@@ -394,6 +394,7 @@ if __name__ == "__main__":
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
+                num_batches = len(train_data)
                 with tqdm.tqdm(
                     train_data, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
@@ -413,7 +414,28 @@ if __name__ == "__main__":
                             {
                                 "Train Loss": f"{loss.item():.4f}"
                             }
-                        ) # print to tqdm bar   
+                        ) # print to tqdm bar
+                avg_train_loss = train_loss_epoch / num_batches
+
+                density_estimator.eval() # put estimator into eval mode
+
+                epoch_val_loss = 0.0
+                with torch.no_grad(): # ensure no gradients computed in val mode
+                    for sample in val_data: 
+                        theta_val = get_theta(sample)
+                        x_val = get_data(sample)   # iterate through validation dataloader
+                        epoch_val_loss += density_estimator.loss(theta_val, x_val).mean().item() # compute overall loss on val dataset batch by batch
+
+                epoch_val_loss /= len(val_data) # average loss over val dataset        
+                scheduler.step(epoch_val_loss)
+                wandb.log(
+                    {
+                        "val_loss": epoch_val_loss,
+                        "step": step,
+                        "learning_rate": scheduler.get_last_lr(),
+                    }
+                ) # log results
+                
             # posterior = inference.build_posterior(density_estimator)
             # # Plot posterior
             # posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
