@@ -392,6 +392,8 @@ if __name__ == "__main__":
                     for i in range(len(training_example[0])):
                         theta = theta[i,:]
                         x = training_example[i,:,:]
+                        print(x.shape)
+                        print(theta.shape)
                         loss = density_estimator.loss(theta, x).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
