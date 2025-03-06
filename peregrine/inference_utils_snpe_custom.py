@@ -207,7 +207,7 @@ def setup_dataloader(store, simulator, conf: dict, round_id: int = None):
     return train_data, val_data, trainer_dir
 
 
-def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int, dummy_theta, dummy_x):
+def setup_density_estimator(conf: dict, dummy_theta, dummy_x):
     """
     Initialise a pytorch lightning trainer and relevant directories
     Args:
@@ -226,26 +226,6 @@ def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int, dummy_t
     >>> train_data, val_data, trainer_dir = setup_dataloader(store, simulator, conf, 1)
     >>> trainer = setup_trainer(trainer_dir, conf, 1)
     """
-    lr_monitor = LearningRateMonitor(logging_interval="step")
-    early_stopping_callback = EarlyStopping(
-        monitor="val_loss",
-        min_delta=0.0,
-        patience=conf["hparams"]["early_stopping"],
-        verbose=False,
-        mode="min",
-    )
-    checkpoint_callback = ModelCheckpoint(
-        monitor="val_loss",
-        dirpath=f"{trainer_dir}",
-        filename="{epoch}_{val_loss:.2f}_{train_loss:.2f}" + f"_R{round_id}",
-        mode="min",
-    )
-    logger_tbl = pl_loggers.TensorBoardLogger(
-        save_dir=f"{trainer_dir}",
-        name=f"{conf['zarr_params']['run_id']}_R{round_id}",
-        version=None,
-        default_hp_metric=False,
-    )
 
     device_params = conf["device_params"]
     hparams = conf["hparams"]

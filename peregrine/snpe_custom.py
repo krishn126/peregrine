@@ -308,7 +308,7 @@ if __name__ == "__main__":
         dummy_theta = joint_prior.sample(torch.Size([64]))  # Sample 64 thetas
         dummy_x = torch.randn(64, 6, 49152)
         # Define the inference object
-        density_estimator = setup_density_estimator(trainer_dir, conf, round_id, dummy_theta, dummy_x)
+        density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
         
         if (
             not conf["snpe"]["infer_only"]
