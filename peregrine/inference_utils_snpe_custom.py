@@ -207,7 +207,7 @@ def setup_dataloader(store, simulator, conf: dict, round_id: int = None):
     return train_data, val_data, trainer_dir
 
 
-def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int):
+def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int, dummy_theta, dummy_x):
     """
     Initialise a pytorch lightning trainer and relevant directories
     Args:
@@ -252,9 +252,8 @@ def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int):
 
     embedding_net = init_network(conf)
     density_estimator = build_maf(
-        num_params = 15,
-        batch_norm = True,
-        num_transforms = 5,
+        dummy_theta,
+        dummy_x,
         embedding_net = embedding_net,
     )
     # current_lr = optimizer.param_groups[0]["lr"]  
