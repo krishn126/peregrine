@@ -260,7 +260,7 @@ def setup_density_estimator(trainer_dir: str, conf: dict, round_id: int):
         max_epochs=hparams["max_epochs"],
         logger=logger_tbl,
         callbacks=[lr_monitor, early_stopping_callback, checkpoint_callback]
-      )
+      )  
     # current_lr = optimizer.param_groups[0]["lr"]  
     return density_estimator
 

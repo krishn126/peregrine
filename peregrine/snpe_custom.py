@@ -16,6 +16,7 @@ import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator, simulate
 from inference_utils_snpe import (
+    init_network,
     setup_zarr_store,
     setup_dataloader,
     setup_density_estimator,
@@ -308,7 +309,8 @@ if __name__ == "__main__":
         dummy_x = torch.randn(64, 6, 49152)
         # Define the inference object
         density_estimator = setup_density_estimator(trainer_dir, conf, round_id)
-        density_estimator = density_estimator(dummy_theta, dummy_x)
+        embedding_net = init_network(conf)
+        density_estimator = density_estimator(dummy_theta, dummy_x, embedding_net)
         
         if (
             not conf["snpe"]["infer_only"]
