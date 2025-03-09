@@ -389,13 +389,17 @@ if __name__ == "__main__":
             num_train_batches = sum(1 for _ in train_data)
             num_val_batches = sum(1 for _ in val_data)
 
+            best_validation_loss = float("inf")
+            no_improvement_count = 0
+            patience = 8 
+
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 # num_batches = len(train_data)
                 with tqdm.tqdm(
-                    total=209, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total=num_train_batches, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for sample in train_data:
@@ -427,7 +431,7 @@ if __name__ == "__main__":
                         epoch_val_loss += density_estimator.loss(theta_val, x_val).mean().item() # compute overall loss on val dataset batch by batch
 
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
-                scheduler.step(epoch_val_loss)
+                scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
                 learning_rate = scheduler.get_last_lr()
                 wandb.log(
                     {
@@ -436,6 +440,14 @@ if __name__ == "__main__":
                         "learning_rate": learning_rate,
                     }
                 ) # log results
+                if epoch_val_loss < best_validation_loss:
+                    best_validation_loss = epoch_val_loss
+                    no_improvement_count = 0  # Reset counter if improvement is seen
+                else:
+                    no_improvement_count += 1
+                    if no_improvement_count >= patience:
+                        print("Early stopping triggered.")
+                        break  # Stop training if no improvement seen for 'patience' validations
 
             posterior = DirectPosterior(density_estimator, joint_prior)
             # Plot posterior
