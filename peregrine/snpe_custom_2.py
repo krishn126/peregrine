@@ -392,6 +392,8 @@ if __name__ == "__main__":
 
             num_train_batches = sum(1 for _ in train_data)
             num_val_batches = sum(1 for _ in val_data)
+            print(f"Number of training batches: {num_train_batches}")
+            print(f"Number of validation batches: {num_val_batches}")
 
             # Train the density estimator
             for epoch in range(num_epochs):
