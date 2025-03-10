@@ -381,7 +381,7 @@ if __name__ == "__main__":
 
             # num_epochs = conf["hyperparams"]["num_epochs"]
             num_epochs = 50
-            optimizer = AdamW(density_estimator.parameters(), lr=5e-4) # initialise pytorch optimiser
+            optimizer = AdamW(density_estimator.parameters(), lr=1e-2) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
             epoch_val_loss = 0.0
