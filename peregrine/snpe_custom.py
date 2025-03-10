@@ -380,7 +380,7 @@ if __name__ == "__main__":
             obs = torch.cat(obs, dim=1)
 
             # num_epochs = conf["hyperparams"]["num_epochs"]
-            num_epochs = 50
+            num_epochs = 20
             optimizer = AdamW(density_estimator.parameters(), lr=1e-2) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
