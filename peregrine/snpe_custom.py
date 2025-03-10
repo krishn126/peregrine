@@ -433,6 +433,8 @@ if __name__ == "__main__":
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
                 scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
                 learning_rate = scheduler.get_last_lr()
+                #get the integer value of the learning rate
+                learning_rate = learning_rate[0]
                 wandb.log(
                     {
                         "val_loss": epoch_val_loss,
@@ -440,14 +442,14 @@ if __name__ == "__main__":
                         "learning_rate": learning_rate,
                     }
                 ) # log results
-                if epoch_val_loss < best_validation_loss:
-                    best_validation_loss = epoch_val_loss
-                    no_improvement_count = 0  # Reset counter if improvement is seen
-                else:
-                    no_improvement_count += 1
-                    if no_improvement_count >= patience:
-                        print("Early stopping triggered.")
-                        break  # Stop training if no improvement seen for 'patience' validations
+                # if epoch_val_loss < best_validation_loss:
+                #     best_validation_loss = epoch_val_loss
+                #     no_improvement_count = 0  # Reset counter if improvement is seen
+                # else:
+                #     no_improvement_count += 1
+                #     if no_improvement_count >= patience:
+                #         print("Early stopping triggered.")
+                #         break  # Stop training if no improvement seen for 'patience' validations
 
             posterior = DirectPosterior(density_estimator, joint_prior)
             # Plot posterior
