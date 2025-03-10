@@ -399,7 +399,7 @@ if __name__ == "__main__":
                 train_loss_epoch = 0.0
                 # num_batches = len(train_data)
                 with tqdm.tqdm(
-                    train_data, total=num_train_batches, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    train_data, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for sample in pbar:
