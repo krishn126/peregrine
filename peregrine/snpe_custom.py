@@ -381,7 +381,7 @@ if __name__ == "__main__":
 
             # num_epochs = conf["hyperparams"]["num_epochs"]
             num_epochs = 50
-            optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
+            optimizer = AdamW(density_estimator.parameters(), lr=5e-4) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
             epoch_val_loss = 0.0
@@ -432,9 +432,8 @@ if __name__ == "__main__":
 
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
                 scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
-                learning_rate = scheduler.get_last_lr()
+                learning_rate = optimizer.param_groups[0]["lr"] 
                 #get the integer value of the learning rate
-                learning_rate = learning_rate[0]
                 wandb.log(
                     {
                         "val_loss": epoch_val_loss,
