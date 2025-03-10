@@ -402,7 +402,7 @@ if __name__ == "__main__":
                     train_data, total=num_train_batches, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for sample in train_data:
+                    for sample in pbar:
                         theta_train = get_theta(sample)
                         x_train = get_data(sample)
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
