@@ -301,7 +301,7 @@ if __name__ == "__main__":
         ]
 
         # Create a joint prior distribution
-        joint_prior = JointPriorTensor(priors, keys_order=order)
+        joint_prior = JointPriorTensor(priors, keys_order=order).to('cuda')
         dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
         dummy_x = torch.randn(64, 6, 49152).to('cuda')  # Sample 64 x's
         # Define the inference object
@@ -382,7 +382,6 @@ if __name__ == "__main__":
             num_val_batches = len(val_data)
             print(f"Training on {num_train_batches} batches")
             print(f"Validating on {num_val_batches} batches")
-            sys.exit()
 
             best_validation_loss = float("inf")
             no_improvement_count = 0
@@ -393,10 +392,10 @@ if __name__ == "__main__":
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    train_data, total = num_train_batches, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = num_train_batches, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for sample in pbar:
+                    for sample in train_data:
                         theta_train = get_theta(sample).to('cuda')
                         x_train = get_data(sample).to('cuda')   # iterate through training dataloader
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
