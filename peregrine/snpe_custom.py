@@ -373,8 +373,16 @@ if __name__ == "__main__":
             step = 0
             epoch_val_loss = 0.0
 
-            num_train_batches = sum(1 for _ in train_data)
-            num_val_batches = sum(1 for _ in val_data)
+            # num_train_batches = sum(1 for _ in train_data)
+            # num_val_batches = sum(1 for _ in val_data)
+
+            train_data = list(train_data)
+            val_data = list(val_data)
+            num_train_batches = len(train_data)
+            num_val_batches = len(val_data)
+            print(f"Training on {num_train_batches} batches")
+            print(f"Validating on {num_val_batches} batches")
+            sys.exit()
 
             best_validation_loss = float("inf")
             no_improvement_count = 0
