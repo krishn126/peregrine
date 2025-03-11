@@ -3,7 +3,7 @@ print(
              /'{>           Initialising PEREGRINE
          ____) (____        ----------------------
        //'--;   ;--'\\      Type: SNPE Inference
-      ///////\_/\\\\\\\     Authors: U.Bhardwaj, J.Alvey
+      ///////\_/\\\\\\\     Authors: U.Bhardwaj, J.Alvey, K. Nanavati
              m m            Version: v0.0.1 | April 2023
 """
 )
@@ -374,15 +374,8 @@ if __name__ == "__main__":
             step = 0
             epoch_val_loss = 0.0
 
-            # num_train_batches = sum(1 for _ in train_data)
-            # num_val_batches = sum(1 for _ in val_data)
-
-            train_data = list(train_data)
-            val_data = list(val_data)
-            num_train_batches = len(train_data)
-            num_val_batches = len(val_data)
-            print(f"Training on {num_train_batches} batches")
-            print(f"Validating on {num_val_batches} batches")
+            num_train_batches = sum(1 for _ in train_data)
+            num_val_batches = sum(1 for _ in val_data)
 
             best_validation_loss = float("inf")
             no_improvement_count = 0
@@ -425,7 +418,7 @@ if __name__ == "__main__":
 
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
                 scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
-                learning_rate = optimizer.param_groups[0]["lr"] 
+                learning_rate = optimizer.param_groups[0]["lr"]
                 #get the integer value of the learning rate
                 wandb.log(
                     {
@@ -451,7 +444,7 @@ if __name__ == "__main__":
                 plt.figure(figsize=(8, 5))
                 plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
                 plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
-                plt.xlabel("Theta")
+                plt.xlabel(f"{order[i]}")
                 plt.ylabel("Density")
                 plt.title(f"Posterior Distribution for the parameter {order[i]}")
                 plt.legend()
