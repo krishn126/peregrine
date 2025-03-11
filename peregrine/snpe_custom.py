@@ -452,6 +452,8 @@ if __name__ == "__main__":
                         print("Early stopping triggered.")
                         break  # Stop training if no improvement seen for 'patience' validations
 
+            density_estimator=density_estimator.to('cpu')
+            joint_prior = joint_prior.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
             # Plot posterior
             posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
