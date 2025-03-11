@@ -355,7 +355,7 @@ if __name__ == "__main__":
                     optimizer,
                     mode="min",
                     factor=0.1,
-                    patience=2,
+                    patience=4,
                     verbose=True,
                     threshold=1e-4,
                     threshold_mode="rel",
@@ -380,14 +380,16 @@ if __name__ == "__main__":
             obs = torch.cat(obs, dim=1)
 
             # num_epochs = conf["hyperparams"]["num_epochs"]
-            num_epochs = 8
+            num_epochs = 50
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
             epoch_val_loss = 0.0
 
-            num_train_batches = sum(1 for _ in train_data)
-            num_val_batches = sum(1 for _ in val_data)
+            # num_train_batches = sum(1 for _ in train_data)
+            # num_val_batches = sum(1 for _ in val_data)
+            num_train_batches = 230
+            num_val_batches = 26
 
             best_validation_loss = float("inf")
             no_improvement_count = 0
@@ -397,9 +399,8 @@ if __name__ == "__main__":
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
-                # num_batches = len(train_data)
                 with tqdm.tqdm(
-                    train_data, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    train_data, total = 230, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for sample in pbar:
@@ -441,14 +442,14 @@ if __name__ == "__main__":
                         "learning_rate": learning_rate,
                     }
                 ) # log results
-                # if epoch_val_loss < best_validation_loss:
-                #     best_validation_loss = epoch_val_loss
-                #     no_improvement_count = 0  # Reset counter if improvement is seen
-                # else:
-                #     no_improvement_count += 1
-                #     if no_improvement_count >= patience:
-                #         print("Early stopping triggered.")
-                #         break  # Stop training if no improvement seen for 'patience' validations
+                if epoch_val_loss < best_validation_loss:
+                    best_validation_loss = epoch_val_loss
+                    no_improvement_count = 0  # Reset counter if improvement is seen
+                else:
+                    no_improvement_count += 1
+                    if no_improvement_count >= patience:
+                        print("Early stopping triggered.")
+                        break  # Stop training if no improvement seen for 'patience' validations
 
             posterior = DirectPosterior(density_estimator, joint_prior)
             # Plot posterior
