@@ -151,14 +151,6 @@ class JointPriorTensor(dist.Distribution):
         total_log_prob = sum(log_probs)
         return total_log_prob
 
-    def to(self, device):
-        """
-        Moves each of the underlying priors to the specified device.
-        """
-        for key in self.priors:
-            if hasattr(self.priors[key], 'to'):
-                self.priors[key] = self.priors[key].to(device)
-        return self
 
 if __name__ == "__main__":
     wandb.init(project="npe4gw_custom_loops") # initialise wandb
@@ -311,7 +303,6 @@ if __name__ == "__main__":
 
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
-        joint_prior = joint_prior.to('cuda')
         dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
         dummy_x = torch.randn(64, 6, 49152).to('cuda')  # Sample 64 x's
         # Define the inference object
@@ -453,7 +444,6 @@ if __name__ == "__main__":
                         break  # Stop training if no improvement seen for 'patience' validations
 
             density_estimator=density_estimator.to('cpu')
-            joint_prior = joint_prior.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
             # Plot posterior
             posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
