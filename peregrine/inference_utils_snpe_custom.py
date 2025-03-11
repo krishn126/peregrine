@@ -231,7 +231,7 @@ def setup_density_estimator(conf: dict, dummy_theta, dummy_x):
     hparams = conf["hparams"]
 
     embedding_net = init_network(conf)
-    density_estimator = build_mdn(
+    density_estimator = build_nsf(
         dummy_theta,
         dummy_x,
         embedding_net = embedding_net,
