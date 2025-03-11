@@ -302,10 +302,11 @@ if __name__ == "__main__":
 
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
-        dummy_theta = joint_prior.sample(torch.Size([64]))  # Sample 64 thetas
-        dummy_x = torch.randn(64, 6, 49152)
+        dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
+        dummy_x = torch.randn(64, 6, 49152).to('cuda')  # Sample 64 x's
         # Define the inference object
         density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
+        density_estimator = density_estimator.to('cuda')
         
         if (
             not conf["snpe"]["infer_only"]
@@ -388,8 +389,8 @@ if __name__ == "__main__":
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for sample in pbar:
-                        theta_train = get_theta(sample)
-                        x_train = get_data(sample)
+                        theta_train = get_theta(sample).to('cuda')
+                        x_train = get_data(sample).to('cuda')   # iterate through training dataloader
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
@@ -410,8 +411,8 @@ if __name__ == "__main__":
                 epoch_val_loss = 0.0
                 with torch.no_grad(): # ensure no gradients computed in val mode
                     for sample in val_data: 
-                        theta_val = get_theta(sample)
-                        x_val = get_data(sample)   # iterate through validation dataloader
+                        theta_val = get_theta(sample).to('cuda')
+                        x_val = get_data(sample).to('cuda')   # iterate through validation dataloader
                         epoch_val_loss += density_estimator.loss(theta_val, x_val).mean().item() # compute overall loss on val dataset batch by batch
 
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
