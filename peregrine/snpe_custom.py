@@ -367,7 +367,7 @@ if __name__ == "__main__":
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
             obs = torch.cat(obs, dim=1)
 
-            num_epochs = conf["hparams"]["num_epochs"]
+            num_epochs = conf["hparams"]["max_epochs"]
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
