@@ -20,6 +20,7 @@ from inference_utils_snpe_custom import (
     setup_dataloader,
     setup_density_estimator,
     load_bounds,
+    setup_scheduler,
 )
 from sbi.inference import SNPE
 import torch
@@ -350,20 +351,6 @@ if __name__ == "__main__":
 
                 return d
             
-            def setup_scheduler(optimizer):
-                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                    optimizer,
-                    mode="min",
-                    factor=0.1,
-                    patience=4,
-                    verbose=True,
-                    threshold=1e-4,
-                    threshold_mode="rel",
-                    cooldown=0,
-                    min_lr=0,
-                    eps=1e-8,
-                )
-                return scheduler
             
             obs = (
                     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
@@ -386,10 +373,8 @@ if __name__ == "__main__":
             step = 0
             epoch_val_loss = 0.0
 
-            # num_train_batches = sum(1 for _ in train_data)
-            # num_val_batches = sum(1 for _ in val_data)
-            num_train_batches = 230
-            num_val_batches = 26
+            num_train_batches = sum(1 for _ in train_data)
+            num_val_batches = sum(1 for _ in val_data)
 
             best_validation_loss = float("inf")
             no_improvement_count = 0
@@ -400,7 +385,7 @@ if __name__ == "__main__":
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    train_data, total = 230, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    train_data, total = num_train_batches, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for sample in pbar:
@@ -410,7 +395,6 @@ if __name__ == "__main__":
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
                         optimizer.step() # take a step given these gradients
-                        # train_losses.append(loss.item()) # track losses
                         train_loss_epoch += loss.item()
                         wandb.log({"train_loss": loss.item()}) # log loss to wandb
                         step += 1

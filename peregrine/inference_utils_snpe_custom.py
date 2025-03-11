@@ -239,6 +239,21 @@ def setup_density_estimator(conf: dict, dummy_theta, dummy_x):
     # current_lr = optimizer.param_groups[0]["lr"]  
     return density_estimator
 
+def setup_scheduler(optimizer):
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=0.1,
+        patience=4,
+        verbose=True,
+        threshold=1e-4,
+        threshold_mode="rel",
+        cooldown=0,
+        min_lr=0,
+        eps=1e-8,
+    )
+    return scheduler
+
 def save_bounds(bounds, conf: dict, round_id: int):
     """
     Save bounds from a particular round
