@@ -441,14 +441,14 @@ if __name__ == "__main__":
             torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator.pt")
             torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt")
             # Plot posterior
-            posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
-            for i in range(15):
-                plt.figure(figsize=(8, 5))
-                plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
-                plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
-                plt.xlabel(f"{order[i]}")
-                plt.ylabel("Density")
-                plt.title(f"Posterior Distribution for the parameter {order[i]}")
-                plt.legend()
-                plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight') 
+            # posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
+            # for i in range(15):
+            #     plt.figure(figsize=(8, 5))
+            #     plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
+            #     plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
+            #     plt.xlabel(f"{order[i]}")
+            #     plt.ylabel("Density")
+            #     plt.title(f"Posterior Distribution for the parameter {order[i]}")
+            #     plt.legend()
+            #     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight') 
                 
