@@ -441,6 +441,8 @@ if __name__ == "__main__":
             # Plot posterior
             posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
             prior_samples = joint_prior.sample(torch.Size([5000]))
+            print(posterior_samples.shape)
+            print(prior_samples.shape)
             for i in range(15):
                 plt.figure(figsize=(8, 5))
                 plt.hist(posterior_samples[:,0,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
@@ -450,7 +452,7 @@ if __name__ == "__main__":
                 plt.title(f"Posterior Distribution for the parameter {order[i]}")
                 plt.legend()
                 plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight') 
-                logratios = torch.log(posterior_samples) - torch.log(prior_samples)
+                logratios = torch.log(posterior_samples[:,0,:]) - torch.log(prior_samples)
                 plt.figure(figsize=(8, 5))
                 plt.hist(logratios[:,i].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
                 plt.xlabel("Logratios")
