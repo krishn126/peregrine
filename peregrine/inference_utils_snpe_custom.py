@@ -227,11 +227,8 @@ def setup_density_estimator(conf: dict, dummy_theta, dummy_x):
     >>> trainer = setup_trainer(trainer_dir, conf, 1)
     """
 
-    device_params = conf["device_params"]
-    hparams = conf["hparams"]
-
     embedding_net = init_network(conf)
-    density_estimator = build_nsf(
+    density_estimator = build_maf(
         dummy_theta,
         dummy_x,
         embedding_net = embedding_net,
