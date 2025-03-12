@@ -18,6 +18,7 @@ from simulator_utils_snpe import init_simulator
 from sbi.inference import SNPE
 import torch
 import torch.nn.functional as F
+import torch.distributions as dist
 
 # For parallelisation
 import subprocess
@@ -26,6 +27,118 @@ import logging
 import matplotlib.pyplot as plt
 import wandb
 
+class SineDistribution(dist.Distribution):
+    """
+    Custom sine-distributed probability distribution over [0, pi],
+    defined by p(x) = (1/2) * sin(x).
+    """   
+    support = dist.constraints.interval(torch.tensor([0.0]), torch.pi)  # Support is [0, pi]
+
+    def __init__(self, validate_args=None):
+        super().__init__(validate_args=validate_args)
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Uses inverse CDF sampling: x = arccos(1 - U), where U ~ Uniform(0,1)
+        """
+        u = torch.rand(sample_shape)
+        return torch.acos(1 - u)  # Returns samples in [0, pi]
+
+    def log_prob(self, x):
+        """
+        Log probability of the sine distribution: log( (1/2) * sin(x) )
+        """
+        inside_support = (x >= torch.tensor([0.0])) & (x <= torch.pi)
+        log_probs = torch.where(
+            inside_support,
+            torch.log(torch.tensor([0.5]) * torch.sin(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+        )
+        return log_probs
+
+class CosineDistribution(dist.Distribution):
+    """
+    Custom cosine-distributed probability distribution over [-pi/2, pi/2],
+    defined by p(x) = (1/2) * cos(x).
+    """
+    support = dist.constraints.interval(-torch.pi / 2, torch.pi / 2)  # Support is [-π/2, π/2]
+
+    def __init__(self, validate_args=None):
+        super().__init__(validate_args=validate_args)
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Uses inverse CDF sampling: x = arcsin(2U - 1), where U ~ Uniform(0,1)
+        """
+        u = torch.rand(sample_shape)
+        return torch.asin(2 * u - 1)  # Returns samples in [-π/2, π/2]
+
+    def log_prob(self, x):
+        """
+        Log probability of the cosine distribution: log( (1/2) * cos(x) )
+        """
+        inside_support = (x >= -torch.pi / 2) & (x <= torch.pi / 2)
+        log_probs = torch.where(
+            inside_support,
+            torch.log(torch.tensor([0.5]) * torch.cos(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+        )
+        return log_probs
+
+class JointPriorTensor(dist.Distribution):
+    def __init__(self, priors, keys_order=None):
+        """
+        Args:
+            priors (dict): A dictionary of individual priors.
+            keys_order (list, optional): An ordered list of keys to define
+                the order in which samples are stacked. If None, uses
+                list(priors.keys()).
+        """
+        self.priors = priors
+        if keys_order is None:
+            keys_order = list(priors.keys())
+        self.keys_order = keys_order
+        super().__init__()
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Sample from each individual prior and stack the results into a single tensor.
+        
+        Returns:
+            Tensor of shape sample_shape + (num_priors,)
+        """
+        samples_list = []
+        for key in self.keys_order:
+            # Sample from the individual prior.
+            sample_val = self.priors[key].sample(sample_shape)
+            # If the sample has an extra dimension (e.g., shape (..., 1)), squeeze it.
+            if sample_val.ndim > len(sample_shape):
+                sample_val = sample_val.squeeze(-1)
+            samples_list.append(sample_val)
+        # Stack along the last dimension so that each sample is a vector.
+        samples_tensor = torch.stack(samples_list, dim=-1)
+        return samples_tensor
+    
+    def log_prob(self, samples_tensor):
+        """
+        Computes the joint log probability by splitting the tensor and summing
+        individual log probabilities.
+        
+        Args:
+            samples_tensor (Tensor): A tensor of shape sample_shape + (num_priors,)
+            
+        Returns:
+            A tensor of shape sample_shape with the joint log probability.
+        """
+        log_probs = []
+        for i, key in enumerate(self.keys_order):
+            # Extract the sample corresponding to the i-th prior.
+            sample_val = samples_tensor[..., i]
+            log_prob_val = self.priors[key].log_prob(sample_val)
+            log_probs.append(log_prob_val)
+        # Sum the log probabilities (since the priors are independent).
+        total_log_prob = sum(log_probs)
+        return total_log_prob
 
 if __name__ == "__main__":
     wandb.init(project="npe4gw_custom_loops") # initialise wandb
