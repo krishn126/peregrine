@@ -283,24 +283,6 @@ if __name__ == "__main__":
             "geocent_time",
         ]
 
-        true_params = [
-            0.8857620985418904,
-            32.136969061169324,
-            0.44320777946320117,
-            5.089358282766109,
-            1.4974326044527126,
-            1.1019600169566186,
-            0.9701993491043245,
-            0.8117959745751914,
-            6.220246980963511,
-            1.884805935473119,
-            900,
-            0.07084716171380845,
-            5.555599820502261,
-            1.0995170458005799,
-            0.0
-        ]
-
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
         dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
