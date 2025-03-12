@@ -25,7 +25,6 @@ import subprocess
 import logging
 
 import matplotlib.pyplot as plt
-import wandb
 
 class SineDistribution(dist.Distribution):
     """
@@ -141,7 +140,6 @@ class JointPriorTensor(dist.Distribution):
         return total_log_prob
 
 if __name__ == "__main__":
-    wandb.init(project="npe4gw_custom_loops") # initialise wandb
     args = sys.argv[1:]
     print(
         f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Reading config file"
