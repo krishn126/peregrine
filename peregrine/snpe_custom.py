@@ -438,6 +438,8 @@ if __name__ == "__main__":
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
+            torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator.pt")
+            torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt")
             # Plot posterior
             posterior_samples = posterior.sample_batched(torch.Size([5000]), x=obs)   
             for i in range(15):
