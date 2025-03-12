@@ -446,6 +446,6 @@ if __name__ == "__main__":
                 plt.axvline(x=true_params[i], linestyle='--', label="True parameter value")
                 plt.xlabel(f"{order[i]}")
                 plt.ylabel("Density")
-                plt.title(f"Posterior Distribution for the parameter {order[i]} with MAF")
+                plt.title(f"Posterior Distribution for the parameter {order[i]}")
                 plt.legend()
-                plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}_maf.png", dpi=300, bbox_inches='tight')        
+                plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight')        

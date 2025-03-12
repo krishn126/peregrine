@@ -99,7 +99,7 @@ resume_from_ckpt = True
 
 [HYPERPARAMS]
 min_epochs = 1
-max_epochs = 10
+max_epochs = 100
 early_stopping = 7
 learning_rate = 5e-4
 num_workers = 8
