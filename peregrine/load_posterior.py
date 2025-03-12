@@ -267,12 +267,12 @@ if __name__ == "__main__":
     obs = torch.cat(obs, dim=1)
     
     loaded_posterior = torch.load('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt')
-    posterior_samples = loaded_posterior.sample_batched(torch.Size([5000]), x=obs)
+    posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     # Plot posterior
     plt.figure(figsize=(15, 8))
     for idx in range(15):
         ax = plt.subplot(5, 3, idx + 1)
-        plt.hist(posterior_samples[:,0,idx].numpy(), bins=30, density=True, alpha=0.7)
+        plt.hist(posterior_samples[:,0,idx].numpy(), bins=100, density=True, alpha=0.7)
         plt.axvline(x=true_params[idx], linestyle='--')
         plt.legend()
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
