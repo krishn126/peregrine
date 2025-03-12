@@ -3,7 +3,7 @@ print(
              /'{>           Initialising PEREGRINE
          ____) (____        ----------------------
        //'--;   ;--'\\      Type: SNPE Inference
-      ///////\_/\\\\\\\     Authors: U.Bhardwaj, J.Alvey, K. Nanavati
+      ///////\_/\\\\\\\     Authors: U.Bhardwaj, J.Alvey, K.Nanavati
              m m            Version: v0.0.1 | April 2023
 """
 )
