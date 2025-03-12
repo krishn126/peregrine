@@ -184,6 +184,26 @@ if __name__ == "__main__":
     )
     
     # Define a fixed ordering for the parameters.
+    priors = {
+            "mass_ratio": dist.Uniform(torch.tensor([0.125]), torch.tensor([1.0])),
+            "chirp_mass": dist.Uniform(torch.tensor([25.0]), torch.tensor([100.0])),
+            "theta_jn": SineDistribution(), 
+            "phase": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+            "tilt_1": SineDistribution(),
+            "tilt_2": SineDistribution(),
+            "a_1": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+            "a_2": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+            "phi_12": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+            "phi_jl": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+            "luminosity_distance": dist.Uniform(torch.tensor([100.0]), torch.tensor([1500.0])),
+            "dec": CosineDistribution(),  # Assuming it already has event_shape=(1,)
+            "ra": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+            "psi": dist.Uniform(torch.tensor([0.0]), torch.tensor([3.14159])),
+            "geocent_time": dist.Uniform(torch.tensor([-0.1]), torch.tensor([0.1])),
+        }
+    
+    joint_prior = JointPriorTensor(priors)
+
     order = [
         "mass_ratio",
         "chirp_mass",
