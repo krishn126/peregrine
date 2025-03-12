@@ -275,5 +275,4 @@ if __name__ == "__main__":
         plt.hist(posterior_samples[:,0,idx].numpy(), bins=30, density=True, alpha=0.7, label="Posterior samples")
         plt.axvline(x=true_params[idx], linestyle='--', label="True parameter value")
         plt.legend()
-        # plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/posterior_for_{order[i]}.png", dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
