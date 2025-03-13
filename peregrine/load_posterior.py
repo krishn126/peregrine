@@ -26,6 +26,9 @@ import logging
 import corner
 import matplotlib.pyplot as plt
 
+import pandas as pd
+import numpy as np
+
 class SineDistribution(dist.Distribution):
     """
     Custom sine-distributed probability distribution over [0, pi],
@@ -286,12 +289,17 @@ if __name__ == "__main__":
         (-0.1, 0.1),  # geocent_time
     ]
     # Plot posterior
+    lrs = pd.read_pickle('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/logratios_R1 (1)')
+
     plt.figure(figsize=(15, 8))
     for idx in range(15):
-        # ax = plt.subplot(5, 3, idx + 1)
-        # plt.hist(posterior_samples[:,0,idx].numpy(), range=ranges[idx], bins=100, density=True, alpha=0.7)
-        # plt.axvline(x=true_params[idx], linestyle='--')
-        # plt.legend()
-        figure = corner.corner(posterior_samples[:,0,:].numpy())
+        ax = plt.subplot(5, 3, idx + 1)
+        plt.hist(posterior_samples[:,0,idx].numpy(), range=ranges[idx], bins=100, density=True, alpha=0.7)
+        logratios = lrs.logratios[:, idx]
+        params = lrs.params[:, idx, 0]
+        plt.hist(params, weights=np.exp(logratios.numpy()), bins=100)
+        plt.axvline(x=true_params[idx], linestyle='--')
+        plt.legend()
+        # figure = corner.corner(posterior_samples[:,0,:].numpy())
         #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
