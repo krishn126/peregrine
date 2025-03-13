@@ -22,7 +22,6 @@ from inference_utils_snpe_custom import (
     load_bounds,
     setup_scheduler,
 )
-from sbi.inference import SNPE
 import torch
 import torch.distributions as dist
 from sbi.inference.posteriors import DirectPosterior

@@ -8,7 +8,6 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 import swyft.lightning as sl
-from sbi.inference import SNPE
 from sbi.neural_nets.net_builders import build_nsf, build_maf, build_mdn
 
 class InferenceNetwork(sl.SwyftModule):
