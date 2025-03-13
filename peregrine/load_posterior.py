@@ -23,7 +23,7 @@ import torch.distributions as dist
 # For parallelisation
 import subprocess
 import logging
-
+import corner
 import matplotlib.pyplot as plt
 
 class SineDistribution(dist.Distribution):
@@ -288,8 +288,10 @@ if __name__ == "__main__":
     # Plot posterior
     plt.figure(figsize=(15, 8))
     for idx in range(15):
-        ax = plt.subplot(5, 3, idx + 1)
-        plt.hist(posterior_samples[:,0,idx].numpy(), range=ranges[idx], bins=100, density=True, alpha=0.7)
-        plt.axvline(x=true_params[idx], linestyle='--')
-        plt.legend()
+        # ax = plt.subplot(5, 3, idx + 1)
+        # plt.hist(posterior_samples[:,0,idx].numpy(), range=ranges[idx], bins=100, density=True, alpha=0.7)
+        # plt.axvline(x=true_params[idx], linestyle='--')
+        # plt.legend()
+        figure = corner.corner(posterior_samples[:,0,:])
+        #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
