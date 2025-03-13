@@ -292,6 +292,6 @@ if __name__ == "__main__":
         # plt.hist(posterior_samples[:,0,idx].numpy(), range=ranges[idx], bins=100, density=True, alpha=0.7)
         # plt.axvline(x=true_params[idx], linestyle='--')
         # plt.legend()
-        figure = corner.corner(posterior_samples[:,0,:])
+        figure = corner.corner(posterior_samples[:,0,:].numpy())
         #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
