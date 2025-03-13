@@ -1,6 +1,6 @@
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator, simulate
-from inference_utils_snpe import setup_zarr_store, load_bounds
+from inference_utils_snpe_custom import setup_zarr_store, load_bounds
 import sys
 
 if __name__ == "__main__":
