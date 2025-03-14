@@ -31,22 +31,22 @@ param_names = [
         "geocent_time",
     ]
 #plot histogram of all parameters
-# plt.figure(figsize=(15, 8))
-# for idx in range(len(param_names)):
-#     ax = plt.subplot(5, 3, idx + 1)
-#     plt.hist(
-#         dynesty_posterior[param_names[idx]],
-#         bins=20,
-#         density=True,
-#         color="blue",
-#         alpha=0.5,
-#     )
-# plt.show()
+plt.figure(figsize=(15, 8))
+for idx in range(len(param_names)):
+    ax = plt.subplot(5, 3, idx + 1)
+    plt.hist(
+        dynesty_posterior[param_names[idx]],
+        bins=20,
+        density=True,
+        color="blue",
+        alpha=0.5,
+    )
+plt.show()
 
 #create dynesty_posterior object with only keys that are in param_names
-dynesty_posterior = {key: dynesty_posterior[key] for key in param_names}
-#create a single tensor with all 15 parameters 
-dynesty_posterior = np.array([dynesty_posterior[key] for key in param_names]).T
-#ensure figure is right size
-fig = corner.corner(dynesty_posterior, scale=0.7)
-plt.show()
+# dynesty_posterior = {key: dynesty_posterior[key] for key in param_names}
+# #create a single tensor with all 15 parameters 
+# dynesty_posterior = np.array([dynesty_posterior[key] for key in param_names]).T
+# #ensure figure is right size
+# fig = corner.corner(dynesty_posterior, scale=0.7)
+# plt.show()
