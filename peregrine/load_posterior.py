@@ -28,6 +28,8 @@ import matplotlib.pyplot as plt
 
 import pandas as pd
 import numpy as np
+import json
+import glob
 
 class SineDistribution(dist.Distribution):
     """
@@ -291,6 +293,14 @@ if __name__ == "__main__":
     # Plot posterior
     lrs = pd.read_pickle('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/logratios_R1')
 
+    def load_dynesty(folder):
+        with open(glob.glob(f"{folder}/dynesty_result.json")[0], "r") as f:
+            dynesty = json.load(f)
+        return dynesty["posterior"]["content"]
+
+    dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
+    dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
+
     plt.figure(figsize=(15, 8))
     # for idx in range(15):
     #     ax = plt.subplot(5, 3, idx + 1)
@@ -300,6 +310,6 @@ if __name__ == "__main__":
     #     plt.hist(params, weights=np.exp(logratios.numpy()), bins=100)
     #     plt.axvline(x=true_params[idx], linestyle='--')
     #     plt.legend()
-    figure = corner.corner(posterior_samples[:,0,:].numpy())
+    figure = corner.corner([posterior_samples[:,0,:].numpy(), dynesty_posterior])
         #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
