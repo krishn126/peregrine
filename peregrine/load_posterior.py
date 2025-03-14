@@ -307,9 +307,9 @@ if __name__ == "__main__":
     plt.figure(figsize=(15, 8))
     for idx in range(15):
         ax = plt.subplot(5, 3, idx + 1)
-        plt.hist([posterior_samples[:,0,idx].numpy(), np.exp(logratios.numpy())], range=ranges[idx], bins=100, density=True, alpha=0.7)
         logratios = lrs.logratios[:, idx]
         params = lrs.params[:, idx, 0]
+        plt.hist([posterior_samples[:,0,idx].numpy(), np.exp(logratios.numpy())], range=ranges[idx], bins=100, density=True, alpha=0.7)
         plt.axvline(x=true_params[idx], linestyle='--')
         plt.legend()
     # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges)
