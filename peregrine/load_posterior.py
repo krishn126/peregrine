@@ -277,7 +277,7 @@ if __name__ == "__main__":
     np.save('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_samples.npy', posterior_samples)
     ranges = [
         (0.125, 1.0),  # mass_ratio
-        (25.0, 40.0),  # chirp_mass
+        (30.0, 35.0),  # chirp_mass
         (0.0, 3.14159/2),  # theta_jn
         (0.0, 6.28318),  # phase
         (0.0, 3.14159),  # tilt_1
@@ -286,11 +286,11 @@ if __name__ == "__main__":
         (0.05, 1.0),  # a_2
         (0.0, 6.28318),  # phi_12
         (0.0, 6.28318/2),  # phi_jl
-        (300.0, 1200.0),  # luminosity_distance
-        (-0.2, 0.2),  # dec
-        (5.0, 6.0),  # ra
+        (600.0, 1200.0),  # luminosity_distance
+        (-0.05, 0.2),  # dec
+        (5.4, 5.8),  # ra
         (0.0, 3.14159),  # psi
-        (-0.01, 0.01),  # geocent_time
+        (-0.005, 0.005),  # geocent_time
     ]
     # # Plot posterior
     # lrs = pd.read_pickle('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/logratios_R1')
