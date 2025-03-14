@@ -313,15 +313,13 @@ if __name__ == "__main__":
     #     plt.hist(params, weights=np.exp(logratios.numpy()), bins=100)
     #     plt.axvline(x=true_params[idx], linestyle='--')
     #     plt.legend()
-    figure = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges)
-    corner.corner(dynesty_posterior, color='red', fig=figure, range=ranges)
-    plt.legend(['SNPE', 'Dynesty'])
-    figure.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=16)
-    blue_line = mlines.Line2D([], [], color='blue', label='Dataset 1')
-    red_line = mlines.Line2D([], [], color='red', label='Dataset 2')
-
+    fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges)
+    corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges)
+    fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
+    blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    red_line = mlines.Line2D([], [], color='red', label='Dynesty')
     # Add the legend
-    figure.legend(handles=[blue_line, red_line], loc="upper right")
+    fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40)
 
         #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
