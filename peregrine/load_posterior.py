@@ -273,45 +273,47 @@ if __name__ == "__main__":
     
     loaded_posterior = torch.load('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
-    ranges = [
-        (0.125, 1.0),  # mass_ratio
-        (25.0, 100.0),  # chirp_mass
-        (0.0, 3.14159),  # theta_jn
-        (0.0, 6.28318),  # phase
-        (0.0, 3.14159),  # tilt_1
-        (0.0, 3.14159),  # tilt_2
-        (0.05, 1.0),  # a_1
-        (0.05, 1.0),  # a_2
-        (0.0, 6.28318),  # phi_12
-        (0.0, 6.28318),  # phi_jl
-        (100.0, 1500.0),  # luminosity_distance
-        (-1.0, 1.0),  # dec
-        (0.0, 6.28318),  # ra
-        (0.0, 3.14159),  # psi
-        (-0.1, 0.1),  # geocent_time
-    ]
-    # Plot posterior
-    lrs = pd.read_pickle('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/logratios_R1')
+    #save posterior samples
+    np.save(posterior_samples, '/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_samples.npy')
+    # ranges = [
+    #     (0.125, 1.0),  # mass_ratio
+    #     (25.0, 100.0),  # chirp_mass
+    #     (0.0, 3.14159),  # theta_jn
+    #     (0.0, 6.28318),  # phase
+    #     (0.0, 3.14159),  # tilt_1
+    #     (0.0, 3.14159),  # tilt_2
+    #     (0.05, 1.0),  # a_1
+    #     (0.05, 1.0),  # a_2
+    #     (0.0, 6.28318),  # phi_12
+    #     (0.0, 6.28318),  # phi_jl
+    #     (100.0, 1500.0),  # luminosity_distance
+    #     (-1.0, 1.0),  # dec
+    #     (0.0, 6.28318),  # ra
+    #     (0.0, 3.14159),  # psi
+    #     (-0.1, 0.1),  # geocent_time
+    # ]
+    # # Plot posterior
+    # lrs = pd.read_pickle('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/logratios_R1')
 
-    def load_dynesty(folder):
-        with open(glob.glob(f"{folder}/dynesty_result.json")[0], "r") as f:
-            dynesty = json.load(f)
-        return dynesty["posterior"]["content"]
+    # def load_dynesty(folder):
+    #     with open(glob.glob(f"{folder}/dynesty_result.json")[0], "r") as f:
+    #         dynesty = json.load(f)
+    #     return dynesty["posterior"]["content"]
 
-    dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
-    dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
+    # dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
+    # dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
 
-    plt.figure(figsize=(15, 8))
-    # for idx in range(15):
-    #     ax = plt.subplot(5, 3, idx + 1)
-    #     plt.hist(posterior_samples[:,0,idx].numpy(), range=ranges[idx], bins=100, density=True, alpha=0.7)
-    #     logratios = lrs.logratios[:, idx]
-    #     params = lrs.params[:, idx, 0]
-    #     plt.hist(params, weights=np.exp(logratios.numpy()), bins=100)
-    #     plt.axvline(x=true_params[idx], linestyle='--')
-    #     plt.legend()
-    figure = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges)
-    corner.corner(dynesty_posterior, color='red', fig=figure, range=ranges)
+    # plt.figure(figsize=(15, 8))
+    # # for idx in range(15):
+    # #     ax = plt.subplot(5, 3, idx + 1)
+    # #     plt.hist(posterior_samples[:,0,idx].numpy(), range=ranges[idx], bins=100, density=True, alpha=0.7)
+    # #     logratios = lrs.logratios[:, idx]
+    # #     params = lrs.params[:, idx, 0]
+    # #     plt.hist(params, weights=np.exp(logratios.numpy()), bins=100)
+    # #     plt.axvline(x=true_params[idx], linestyle='--')
+    # #     plt.legend()
+    # figure = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges)
+    # corner.corner(dynesty_posterior, color='red', fig=figure, range=ranges)
 
-        #corner plot of posteriors
-    plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
+    #     #corner plot of posteriors
+    # plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
