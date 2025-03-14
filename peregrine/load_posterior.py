@@ -322,4 +322,4 @@ if __name__ == "__main__":
     # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40)
 
         #corner plot of posteriors
-    plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors_hist.png", dpi=300, bbox_inches='tight')
