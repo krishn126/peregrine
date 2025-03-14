@@ -310,6 +310,8 @@ if __name__ == "__main__":
     #     plt.hist(params, weights=np.exp(logratios.numpy()), bins=100)
     #     plt.axvline(x=true_params[idx], linestyle='--')
     #     plt.legend()
-    figure = corner.corner([posterior_samples[:,0,:].numpy(), dynesty_posterior])
+    figure = corner.corner(posterior_samples[:,0,:].numpy(), color='blue')
+    corner.corner(dynesty_posterior, color='red', fig=figure)
+
         #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors.png", dpi=300, bbox_inches='tight')
