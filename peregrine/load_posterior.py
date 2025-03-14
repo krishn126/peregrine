@@ -274,7 +274,7 @@ if __name__ == "__main__":
     loaded_posterior = torch.load('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     #save posterior samples
-    np.save(posterior_samples, '/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_samples.npy')
+    np.save('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_samples.npy', posterior_samples)
     # ranges = [
     #     (0.125, 1.0),  # mass_ratio
     #     (25.0, 100.0),  # chirp_mass
