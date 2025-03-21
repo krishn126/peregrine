@@ -132,3 +132,4 @@ peregrine/tmnre_store/*
 **/**/sbi-logs/**
 **/**/*store*/**
 **/**/*wandb*/**
+**/dynesty_result*
