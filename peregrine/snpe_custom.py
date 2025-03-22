@@ -404,7 +404,7 @@ if __name__ == "__main__":
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
-            torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator.pt")
-            torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt")
+            torch.save(density_estimator, "/data/kn405/Code/peregrine/peregrine/density_estimator.pt")
+            torch.save(posterior, "/data/kn405/Code/peregrine/peregrine/posterior.pt")
              
                 
