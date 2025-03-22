@@ -304,23 +304,28 @@ if __name__ == "__main__":
     dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
 
-    plt.figure(figsize=(15, 8))
-    for idx in range(15):
-        ax = plt.subplot(5, 3, idx + 1)
-        ax.set_title(f"{order[idx]}")
-        logratios = lrs.logratios[:, idx]
-        params = lrs.params[:, idx, 0]
-        plt.hist([posterior_samples[:,0,idx].numpy(), np.exp(logratios.numpy())], range=ranges[idx], bins=100, density=True, alpha=0.7)
-        plt.axvline(x=true_params[idx], linestyle='--')
-        plt.legend()
-    plt.tight_layout()
-    # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges)
-    # corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges)
-    # fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
+    # fig = plt.figure(figsize=(15, 8))
+    # for idx in range(15):
+    #     ax = plt.subplot(5, 3, idx + 1)
+    #     ax.set_title(f"{order[idx]}")
+    #     logratios = lrs.logratios[:, idx]
+    #     params = lrs.params[:, idx, 0]
+    #     weights1 = np.ones_like(posterior_samples[:,0,idx])
+    #     weights2 = np.exp(logratios.numpy())
+    #     plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
+    #     plt.axvline(x=true_params[idx], linestyle='--')
+    # fig.suptitle("NPE vs TMNRE", fontsize=20)
+    # plt.tight_layout()
     # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
-    # red_line = mlines.Line2D([], [], color='red', label='Dynesty')
-    # # Add the legend
-    # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40)
+    # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
+    # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
+    fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
+    corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
+    fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
+    blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    red_line = mlines.Line2D([], [], color='red', label='Dynesty')
+    # Add the legend
+    fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40)
 
         #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors_hist.png", dpi=300, bbox_inches='tight')
