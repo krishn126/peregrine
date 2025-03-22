@@ -294,7 +294,7 @@ if __name__ == "__main__":
         (-0.005, 0.005),  # geocent_time
     ]
     # # Plot posterior
-    lrs = pd.read_pickle('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/logratios_R7')
+    lrs = pd.read_pickle('/data/kn405/Code/peregrine/peregrine/logratios_R7')
 
     def load_dynesty(folder):
         with open(glob.glob(f"{folder}/dynesty_result.json")[0], "r") as f:
