@@ -327,5 +327,5 @@ if __name__ == "__main__":
     # red_line = mlines.Line2D([], [], color='red', label='Dynesty')
     # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
-        #corner plot of posteriors
+    #corner plot of posteriors
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
