@@ -272,10 +272,10 @@ if __name__ == "__main__":
     obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
     obs = torch.cat(obs, dim=1)
     
-    loaded_posterior = torch.load('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt')
+    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     #save posterior samples
-    np.save('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_samples.npy', posterior_samples)
+    np.save('/data/kn405/Code/peregrine//peregrine/posterior_samples.npy', posterior_samples)
     ranges = [
         (0.125, 1.0),  # mass_ratio
         (30.0, 35.0),  # chirp_mass
@@ -328,4 +328,4 @@ if __name__ == "__main__":
     fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40)
 
         #corner plot of posteriors
-    plt.savefig(f"/data/kn405/Code/peregrine_snpe/peregrine/posterior_plots/all_posteriors_hist.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/all_posteriors_hist.png", dpi=300, bbox_inches='tight')
