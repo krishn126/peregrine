@@ -341,14 +341,14 @@ if __name__ == "__main__":
             epoch_val_loss = 0.0
             
             # truncate train data to only first ten percent of the data
-            train_data = train_data[:len(train_data)//10]
-            val_data = val_data[:len(val_data)//10]
+            # train_data = train_data[:len(train_data)//10]
+            # val_data = val_data[:len(val_data)//10]
 
             num_train_batches = sum(1 for _ in train_data)
             num_val_batches = sum(1 for _ in val_data)
 
             sys.exit()
-            
+
             best_validation_loss = float("inf")
             no_improvement_count = 0
             patience = 8 
