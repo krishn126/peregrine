@@ -6,6 +6,7 @@ from scipy.stats import linregress
 x = np.array([134272, 26752, 13312, 1280, 128])  # simulation number variables
 y = np.array([-4.79168, -2.19829, -0.26212, 6.31091, 8.74037])  # val loss variables
 
+y = y + 6
 # Take log of the data
 log_x = np.log(x)
 log_y = np.log(y)
