@@ -340,6 +340,8 @@ if __name__ == "__main__":
             step = 0
             epoch_val_loss = 0.0
 
+            #truncate the training and validation data, which are ZarrStoreIterableDatasets to first 10% of samples
+
             num_train_batches = sum(1 for _ in train_data)
             num_val_batches = sum(1 for _ in val_data)
 
