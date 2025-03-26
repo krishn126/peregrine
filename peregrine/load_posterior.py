@@ -243,6 +243,10 @@ if __name__ == "__main__":
         1.0995170458005799,
         0.0
     ]
+    #turn true_params into [1,15] torch tensor
+    true_params = torch.tensor([true_params])
+    print(true_params.shape)
+    sys.exit()
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
