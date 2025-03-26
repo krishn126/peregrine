@@ -272,6 +272,7 @@ if __name__ == "__main__":
     obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
     obs = torch.cat(obs, dim=1)
     
+    loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/density_estimator.pt')
     loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     #save posterior samples
@@ -304,21 +305,50 @@ if __name__ == "__main__":
     dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
 
-    fig = plt.figure(figsize=(15, 8))
-    for idx in range(15):
-        ax = plt.subplot(5, 3, idx + 1)
-        ax.set_title(f"{order[idx]}")
-        logratios = lrs.logratios[:, idx]
-        params = lrs.params[:, idx, 0]
-        weights1 = np.ones_like(posterior_samples[:,0,idx])
-        weights2 = np.exp(logratios.numpy())
-        plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
-        plt.axvline(x=true_params[idx], linestyle='--')
-    fig.suptitle("NPE vs TMNRE", fontsize=20)
-    plt.tight_layout()
-    blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
-    orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
-    fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
+    print(posterior_samples.shape)
+    print(obs.shape)
+    sys.exit()
+
+    def compute_fisher_information(density_estimator, posterior_samples):
+        """
+        Compute the Fisher Information Matrix (FIM) using posterior samples.
+        
+        Args:
+            density_estimator: Trained density estimator (e.g., from sbi)
+            posterior_samples: Tensor of posterior samples (N_samples, D_params)
+            
+        Returns:
+            FIM: Fisher Information Matrix (D_params, D_params)
+        """
+        posterior_samples = torch.tensor(posterior_samples, requires_grad=True)
+
+        log_probs = density_estimator.log_prob(posterior_samples, condition=obs)  # Log posterior probabilities
+        grads = torch.autograd.grad(log_probs.sum(), posterior_samples, create_graph=True)[0]  # Compute gradient
+        FIM = torch.einsum("ni,nj->ij", grads, grads) / len(posterior_samples)  # Expectation over samples
+
+        return FIM.detach().numpy()
+
+    FIM = compute_fisher_information(loaded_density_estimator, posterior_samples)
+
+    # Compute CRB: Take the trace of the inverse
+    CRB = np.trace(np.linalg.inv(FIM))
+    print("Cramer-Rao Bound (CRB) Loss Estimate:", CRB)
+
+    # fig = plt.figure(figsize=(15, 8))
+    # for idx in range(15):
+    #     ax = plt.subplot(5, 3, idx + 1)
+    #     ax.set_title(f"{order[idx]}")
+    #     logratios = lrs.logratios[:, idx]
+    #     params = lrs.params[:, idx, 0]
+    #     weights1 = np.ones_like(posterior_samples[:,0,idx])
+    #     weights2 = np.exp(logratios.numpy())
+    #     plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
+    #     plt.axvline(x=true_params[idx], linestyle='--')
+    # fig.suptitle("NPE vs TMNRE", fontsize=20)
+    # plt.tight_layout()
+    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
+    # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
     
     # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
     # corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
