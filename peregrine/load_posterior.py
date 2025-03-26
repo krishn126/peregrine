@@ -278,8 +278,10 @@ if __name__ == "__main__":
     loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/density_estimator.pt')
     loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
+
     #save posterior samples
     np.save('/data/kn405/Code/peregrine//peregrine/posterior_samples.npy', posterior_samples)
+
     ranges = [
         (0.125, 1.0),  # mass_ratio
         (30.0, 35.0),  # chirp_mass
@@ -308,50 +310,27 @@ if __name__ == "__main__":
     dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
 
-    #change obs shape to [1,6,8192]
-    obs = obs.unsqueeze(0)
-
-    def compute_fisher_information(density_estimator, posterior_samples, obs, batch_size=500):
+    def crb_from_posterior_samples(posterior_samples):
         """
-        Compute the Fisher Information Matrix (FIM) using posterior samples.
-        
+        Approximate the CRB using posterior samples by calculating the inverse of the variance.
+
         Args:
-            density_estimator: Trained density estimator (e.g., from sbi)
-            posterior_samples: Tensor of posterior samples (N_samples, D_params)
-            
+            posterior_samples: Tensor of shape [N_samples, D_params] containing posterior samples.
+
         Returns:
-            FIM: Fisher Information Matrix (D_params, D_params)
+            CRB: Cramér-Rao Bound as an approximation.
         """
-        posterior_samples = posterior_samples.squeeze(1)  # [10000, 15]
-        obs_single = obs[0, :, :]  # Select one observation to condition on
-        obs_repeated = obs_single.unsqueeze(0).expand(batch_size, -1)  # Match batch size
+        # Compute the covariance matrix from posterior samples
+        covariance_matrix = np.cov(posterior_samples.T)
 
-        D_params = posterior_samples.shape[1]
-        FIM = torch.zeros((D_params, D_params))
+        # Compute the CRB as the trace of the inverse of the covariance matrix
+        crb_approx = np.trace(np.log(np.linalg.inv(covariance_matrix)))
 
-        for i in range(0, len(posterior_samples), batch_size):
-            batch = posterior_samples[i : i + batch_size]  # Mini-batch
-            obs_batch = obs_repeated[: len(batch)]  # Match batch size
-
-            log_probs = density_estimator.log_prob(batch, condition=obs_batch)
-
-            grads = torch.autograd.grad(log_probs.sum(), batch, create_graph=True)[0]
-            
-            # Ensure grads have the correct shape [batch_size, D_params]
-            grads = grads.squeeze()  # Remove extra dimensions if any
-
-            # Compute the Fisher Information Matrix (sum of outer products of gradients)
-            FIM += torch.einsum("ni,nj->ij", grads, grads) / len(batch)
-
-        FIM /= (len(posterior_samples) / batch_size)  # Normalize
-
-        return FIM.detach().numpy()
-
-    FIM = compute_fisher_information(loaded_density_estimator, posterior_samples, obs, batch_size=500)
-
-    # Compute CRB: Take the trace of the inverse
-    CRB = np.trace(np.linalg.inv(FIM))
-    print("Cramer-Rao Bound (CRB) Loss Estimate:", CRB)
+        return crb_approx
+    
+    posterior_samples = posterior_samples.squeeze(1)
+    CRB = crb_from_posterior_samples(posterior_samples)
+    print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
 
     # fig = plt.figure(figsize=(15, 8))
     # for idx in range(15):
@@ -377,4 +356,4 @@ if __name__ == "__main__":
     # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
     #corner plot of posteriors
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
