@@ -311,7 +311,7 @@ if __name__ == "__main__":
     #change obs shape to [1,6,8192]
     obs = obs.unsqueeze(0)
 
-    def compute_fisher_information(density_estimator, posterior_samples):
+    def compute_fisher_information(density_estimator, posterior_samples, obs, batch_size=500):
         """
         Compute the Fisher Information Matrix (FIM) using posterior samples.
         
@@ -322,15 +322,32 @@ if __name__ == "__main__":
         Returns:
             FIM: Fisher Information Matrix (D_params, D_params)
         """
-        posterior_samples = torch.tensor(posterior_samples, requires_grad=True)
+        posterior_samples = posterior_samples.squeeze(1)  # [10000, 15]
+        obs_single = obs[0, :, :]  # Select one observation to condition on
+        obs_repeated = obs_single.unsqueeze(0).expand(batch_size, -1)  # Match batch size
 
-        log_probs = density_estimator.log_prob(posterior_samples, condition=obs)  # Log posterior probabilities
-        grads = torch.autograd.grad(log_probs.sum(), posterior_samples, create_graph=True)[0]  # Compute gradient
-        FIM = torch.einsum("ni,nj->ij", grads, grads) / len(posterior_samples)  # Expectation over samples
+        D_params = posterior_samples.shape[1]
+        FIM = torch.zeros((D_params, D_params))
+
+        for i in range(0, len(posterior_samples), batch_size):
+            batch = posterior_samples[i : i + batch_size]  # Mini-batch
+            obs_batch = obs_repeated[: len(batch)]  # Match batch size
+
+            log_probs = density_estimator.log_prob(batch, condition=obs_batch)
+
+            grads = torch.autograd.grad(log_probs.sum(), batch, create_graph=True)[0]
+            
+            # Ensure grads have the correct shape [batch_size, D_params]
+            grads = grads.squeeze()  # Remove extra dimensions if any
+
+            # Compute the Fisher Information Matrix (sum of outer products of gradients)
+            FIM += torch.einsum("ni,nj->ij", grads, grads) / len(batch)
+
+        FIM /= (len(posterior_samples) / batch_size)  # Normalize
 
         return FIM.detach().numpy()
 
-    FIM = compute_fisher_information(loaded_density_estimator, posterior_samples)
+    FIM = compute_fisher_information(loaded_density_estimator, posterior_samples, obs, batch_size=500)
 
     # Compute CRB: Take the trace of the inverse
     CRB = np.trace(np.linalg.inv(FIM))
