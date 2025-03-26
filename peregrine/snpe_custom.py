@@ -339,7 +339,7 @@ if __name__ == "__main__":
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
             epoch_val_loss = 0.0
-            
+
             num_train_batches = sum(1 for _ in train_data)
             num_val_batches = sum(1 for _ in val_data)
 
@@ -404,7 +404,7 @@ if __name__ == "__main__":
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
-            torch.save(density_estimator, "/data/kn405/Code/peregrine/peregrine/density_estimator.pt")
-            torch.save(posterior, "/data/kn405/Code/peregrine/peregrine/posterior.pt")
+            torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator.pt")
+            torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt")
              
                 
