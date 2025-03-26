@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
 # Sample data
-x = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])  # X values
-y = np.array([2, 5, 9, 18, 25, 36, 49, 65, 81, 100])  # Y values (approximately ~ x^2)
+x = np.array([134272, 26752, 13312, 1280, 128])  # simulation number variables
+y = np.array([-4.79168, -2.19829, -0.26212, 6.31091, 8.74037])  # val loss variables
 
 # Take log of the data
 log_x = np.log(x)
@@ -24,7 +24,7 @@ plt.loglog(x_fit, y_fit, 'r-', label=f"Best Fit: y = {np.exp(intercept):.2f}x^{s
 
 # Labels and title
 plt.xlabel('Number of training simulations')
-plt.ylabel('Validation Loss')
+plt.ylabel('Shifted Validation Loss (L - L_{CR})')
 plt.title('How Validation Loss changes with number of Training Simulations')
 plt.legend()
 
