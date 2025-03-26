@@ -243,10 +243,9 @@ if __name__ == "__main__":
         1.0995170458005799,
         0.0
     ]
+
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    print(true_params.shape)
-    sys.exit()
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -309,9 +308,6 @@ if __name__ == "__main__":
     dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
 
-    print(posterior_samples.shape)
-    print(obs.shape)
-    sys.exit()
 
     def compute_fisher_information(density_estimator, posterior_samples):
         """
@@ -326,7 +322,7 @@ if __name__ == "__main__":
         """
         posterior_samples = torch.tensor(posterior_samples, requires_grad=True)
 
-        log_probs = density_estimator.log_prob(posterior_samples, condition=obs)  # Log posterior probabilities
+        log_probs = density_estimator.log_prob(posterior_samples, condition=obs[0,:])  # Log posterior probabilities
         grads = torch.autograd.grad(log_probs.sum(), posterior_samples, create_graph=True)[0]  # Compute gradient
         FIM = torch.einsum("ni,nj->ij", grads, grads) / len(posterior_samples)  # Expectation over samples
 
