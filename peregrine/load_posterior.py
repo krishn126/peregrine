@@ -308,6 +308,8 @@ if __name__ == "__main__":
     dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
 
+    #change obs shape to [1,6,8192]
+    obs = obs.unsqueeze(0)
 
     def compute_fisher_information(density_estimator, posterior_samples):
         """
@@ -322,7 +324,7 @@ if __name__ == "__main__":
         """
         posterior_samples = torch.tensor(posterior_samples, requires_grad=True)
 
-        log_probs = density_estimator.log_prob(posterior_samples, condition=obs[0,:])  # Log posterior probabilities
+        log_probs = density_estimator.log_prob(posterior_samples, condition=obs)  # Log posterior probabilities
         grads = torch.autograd.grad(log_probs.sum(), posterior_samples, create_graph=True)[0]  # Compute gradient
         FIM = torch.einsum("ni,nj->ij", grads, grads) / len(posterior_samples)  # Expectation over samples
 
