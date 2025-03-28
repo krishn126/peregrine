@@ -231,6 +231,7 @@ def setup_density_estimator(conf: dict, dummy_theta, dummy_x):
         dummy_theta,
         dummy_x,
         embedding_net = embedding_net,
+        hidden_features = 50,
     )
     return density_estimator
 

@@ -44,25 +44,30 @@ class SineDistribution(dist.Distribution):
     """   
     support = dist.constraints.interval(torch.tensor([0.0]), torch.pi)  # Support is [0, pi]
 
-    def __init__(self, validate_args=None):
+    def __init__(self, validate_args=None, device="cuda"):
         super().__init__(validate_args=validate_args)
-    
+        self.device = device
+
     def sample(self, sample_shape=torch.Size()):
         """
         Uses inverse CDF sampling: x = arccos(1 - U), where U ~ Uniform(0,1)
         """
-        u = torch.rand(sample_shape)
+        u = torch.rand(sample_shape, device=self.device)  # Ensure U is on the correct device
         return torch.acos(1 - u)  # Returns samples in [0, pi]
 
     def log_prob(self, x):
         """
         Log probability of the sine distribution: log( (1/2) * sin(x) )
         """
-        inside_support = (x >= torch.tensor([0.0])) & (x <= torch.pi)
+        # Move x to the same device as required
+        x = x.to(self.device)
+
+        inside_support = (x >= 0.0) & (x <= torch.pi)
+        
         log_probs = torch.where(
             inside_support,
-            torch.log(torch.tensor([0.5]) * torch.sin(x)),  # log(p(x))
-            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+            torch.log(torch.tensor(0.5, device=x.device) * torch.sin(x)),  # Ensure calculations stay on the same device
+            torch.tensor(float("-inf"), device=x.device)  # Log prob is -inf outside support
         )
         return log_probs
 
@@ -73,25 +78,30 @@ class CosineDistribution(dist.Distribution):
     """
     support = dist.constraints.interval(-torch.pi / 2, torch.pi / 2)  # Support is [-π/2, π/2]
 
-    def __init__(self, validate_args=None):
+    def __init__(self, validate_args=None, device="cuda"):
         super().__init__(validate_args=validate_args)
-    
+        self.device = device
+
     def sample(self, sample_shape=torch.Size()):
         """
         Uses inverse CDF sampling: x = arcsin(2U - 1), where U ~ Uniform(0,1)
         """
-        u = torch.rand(sample_shape)
+        u = torch.rand(sample_shape, device=self.device)  # Ensure U is on the correct device
         return torch.asin(2 * u - 1)  # Returns samples in [-π/2, π/2]
 
     def log_prob(self, x):
         """
         Log probability of the cosine distribution: log( (1/2) * cos(x) )
         """
+        # Move x to the same device as required
+        x = x.to(self.device)
+
         inside_support = (x >= -torch.pi / 2) & (x <= torch.pi / 2)
+        
         log_probs = torch.where(
             inside_support,
-            torch.log(torch.tensor([0.5]) * torch.cos(x)),  # log(p(x))
-            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+            torch.log(torch.tensor(0.5, device=x.device) * torch.cos(x)),  # Ensure calculations stay on the same device
+            torch.tensor(float("-inf"), device=x.device)  # Log prob is -inf outside support
         )
         return log_probs
 
@@ -120,7 +130,7 @@ class JointPriorTensor(dist.Distribution):
         samples_list = []
         for key in self.keys_order:
             # Sample from the individual prior.
-            sample_val = self.priors[key].sample(sample_shape)
+            sample_val = self.priors[key].sample(sample_shape).to('cuda')
             # If the sample has an extra dimension (e.g., shape (..., 1)), squeeze it.
             if sample_val.ndim > len(sample_shape):
                 sample_val = sample_val.squeeze(-1)
@@ -282,8 +292,15 @@ if __name__ == "__main__":
             "geocent_time",
         ]
 
+        for key, prior in priors.items():
+            if isinstance(prior, torch.distributions.Uniform):
+                priors[key] = torch.distributions.Uniform(
+                    prior.low.to('cuda'), prior.high.to('cuda')
+                )
+
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
+
         dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
         dummy_x = torch.randn(64, 6, 49152).to('cuda')  # Sample 64 x's
         # Define the inference object
@@ -338,9 +355,7 @@ if __name__ == "__main__":
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
-            epoch_val_loss = 0.0
-
-            #truncate the training and validation data, which are ZarrStoreIterableDatasets to first 10% of samples
+            epoch_val_loss = 0.0         
 
             num_train_batches = sum(1 for _ in train_data)
             num_val_batches = sum(1 for _ in val_data)
@@ -349,17 +364,21 @@ if __name__ == "__main__":
             no_improvement_count = 0
             patience = 8 
 
+            limit = int(0.1*num_train_batches)
+
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    total = num_train_batches, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(0.1*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
-                    for sample in train_data:
+                    for i, sample in enumerate(train_data):
+                        if i > limit:
+                            break
                         theta_train = get_theta(sample).to('cuda')
-                        x_train = get_data(sample).to('cuda')   # iterate through training dataloader
+                        x_train = get_data(sample).to('cuda') 
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
@@ -409,4 +428,3 @@ if __name__ == "__main__":
             torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator.pt")
             torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt")
              
-                
