@@ -348,12 +348,12 @@ if __name__ == "__main__":
     # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
     # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
     
-    # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
-    # corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
-    # fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
-    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
-    # red_line = mlines.Line2D([], [], color='red', label='Dynesty')
-    # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
+    fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
+    corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
+    fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
+    blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    red_line = mlines.Line2D([], [], color='red', label='Dynesty')
+    fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
     #corner plot of posteriors
-    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
