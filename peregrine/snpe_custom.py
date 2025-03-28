@@ -44,32 +44,27 @@ class SineDistribution(dist.Distribution):
     """   
     support = dist.constraints.interval(torch.tensor([0.0]), torch.pi)  # Support is [0, pi]
 
-    def __init__(self, validate_args=None, device="cuda"):
+    def __init__(self, validate_args=None):
         super().__init__(validate_args=validate_args)
-        self.device = device
-
+    
     def sample(self, sample_shape=torch.Size()):
         """
         Uses inverse CDF sampling: x = arccos(1 - U), where U ~ Uniform(0,1)
         """
-        u = torch.rand(sample_shape, device=self.device)  # Ensure U is on the correct device
+        u = torch.rand(sample_shape)
         return torch.acos(1 - u)  # Returns samples in [0, pi]
 
     def log_prob(self, x):
         """
         Log probability of the sine distribution: log( (1/2) * sin(x) )
         """
-        # Move x to the same device as required
-        x = x.to(self.device)
-
-        inside_support = (x >= 0.0) & (x <= torch.pi)
-        
+        inside_support = (x >= torch.tensor([0.0])) & (x <= torch.pi)
         log_probs = torch.where(
             inside_support,
-            torch.log(torch.tensor(0.5, device=x.device) * torch.sin(x)),  # Ensure calculations stay on the same device
-            torch.tensor(float("-inf"), device=x.device)  # Log prob is -inf outside support
+            torch.log(torch.tensor([0.5]) * torch.sin(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
         )
-        return log_probs
+        return log_probs 
 
 class CosineDistribution(dist.Distribution):
     """
@@ -78,30 +73,25 @@ class CosineDistribution(dist.Distribution):
     """
     support = dist.constraints.interval(-torch.pi / 2, torch.pi / 2)  # Support is [-π/2, π/2]
 
-    def __init__(self, validate_args=None, device="cuda"):
+    def __init__(self, validate_args=None):
         super().__init__(validate_args=validate_args)
-        self.device = device
-
+    
     def sample(self, sample_shape=torch.Size()):
         """
         Uses inverse CDF sampling: x = arcsin(2U - 1), where U ~ Uniform(0,1)
         """
-        u = torch.rand(sample_shape, device=self.device)  # Ensure U is on the correct device
+        u = torch.rand(sample_shape)
         return torch.asin(2 * u - 1)  # Returns samples in [-π/2, π/2]
 
     def log_prob(self, x):
         """
         Log probability of the cosine distribution: log( (1/2) * cos(x) )
         """
-        # Move x to the same device as required
-        x = x.to(self.device)
-
         inside_support = (x >= -torch.pi / 2) & (x <= torch.pi / 2)
-        
         log_probs = torch.where(
             inside_support,
-            torch.log(torch.tensor(0.5, device=x.device) * torch.cos(x)),  # Ensure calculations stay on the same device
-            torch.tensor(float("-inf"), device=x.device)  # Log prob is -inf outside support
+            torch.log(torch.tensor([0.5]) * torch.cos(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
         )
         return log_probs
 
