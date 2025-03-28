@@ -120,7 +120,7 @@ class JointPriorTensor(dist.Distribution):
         samples_list = []
         for key in self.keys_order:
             # Sample from the individual prior.
-            sample_val = self.priors[key].sample(sample_shape).to('cuda')
+            sample_val = self.priors[key].sample(sample_shape)
             # If the sample has an extra dimension (e.g., shape (..., 1)), squeeze it.
             if sample_val.ndim > len(sample_shape):
                 sample_val = sample_val.squeeze(-1)
@@ -281,12 +281,6 @@ if __name__ == "__main__":
             "psi",
             "geocent_time",
         ]
-
-        for key, prior in priors.items():
-            if isinstance(prior, torch.distributions.Uniform):
-                priors[key] = torch.distributions.Uniform(
-                    prior.low.to('cuda'), prior.high.to('cuda')
-                )
 
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
