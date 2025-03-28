@@ -328,9 +328,9 @@ if __name__ == "__main__":
 
         return crb_approx
     
-    posterior_samples = posterior_samples.squeeze(1)
-    CRB = crb_from_posterior_samples(posterior_samples)
-    print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
+    # posterior_samples = posterior_samples.squeeze(1)
+    # CRB = crb_from_posterior_samples(posterior_samples)
+    # print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
 
     # fig = plt.figure(figsize=(15, 8))
     # for idx in range(15):
