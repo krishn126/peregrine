@@ -310,8 +310,7 @@ if __name__ == "__main__":
 
     dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
-    print(dynesty_posterior.shape)
-    print(posterior_samples.shape)
+    
 
     def crb_from_posterior_samples(posterior_samples):
         """
@@ -410,6 +409,7 @@ if __name__ == "__main__":
     # Example usage with posterior samples
     js_div_dyn = 0.0
     js_div_per = 0.0
+    js_div_dynper = 0.0
 
     for i in range(15):
         samples_p = posterior_samples[:,0,i].numpy()
@@ -419,10 +419,13 @@ if __name__ == "__main__":
         weights = np.exp(logratios)
         js_div_dyn += js_divergence(samples_p, samples_q)
         js_div_per += js_divergence_hist(samples_p, samples_t, weights)
+        js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
     
 
     js_div_dyn = js_div_dyn / 15
     js_div_per = js_div_per / 15
+    js_div_dynper = js_div_dynper / 15
 
     print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
     print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
+    print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
