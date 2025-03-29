@@ -387,13 +387,42 @@ if __name__ == "__main__":
         
         js_div = 0.5 * (kl_p_m + kl_q_m)
         return js_div
+    
+    def js_divergence_hist(samples_p, samples_q, weights, bins=50):
+        hist_p, bin_edges = np.histogram(samples_p, bins=bins, density=True)
+        hist_q, _ = np.histogram(samples_q, weights=weights, bins=bin_edges, density=True)
+        
+        # Convert to probabilities
+        hist_p += 1e-10  # Avoid log(0)
+        hist_q += 1e-10
+        
+        hist_p /= hist_p.sum()
+        hist_q /= hist_q.sum()
+        
+        hist_m = 0.5 * (hist_p + hist_q)
+        
+        kl_p_m = entropy(hist_p, hist_m)
+        kl_q_m = entropy(hist_q, hist_m)
+        
+        js_div = 0.5 * (kl_p_m + kl_q_m)
+        return js_div
 
     # Example usage with posterior samples
-    js_div = 0.0
+    js_div_dyn = 0.0
+    js_div_per = 0.0
+
     for i in range(15):
         samples_p = posterior_samples[:,0,i].numpy()
         samples_q = dynesty_posterior[:,i]
-        js_div += js_divergence(samples_p, samples_q)
+        samples_t = lrs.params[:,i,0].numpy()
+        logratios = lrs.logratios[:,i].numpy()
+        weights = np.exp(logratios)
+        js_div_dyn += js_divergence(samples_p, samples_q)
+        js_div_per += js_divergence(samples_p, samples_t, weights)
+    
 
-    js_div = js_div / 15
-    print(f"Jensen-Shannon Divergence: {js_div:.4f}")
+    js_div_dyn = js_div_dyn / 15
+    js_div_per = js_div_per / 15
+
+    print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
+    print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
