@@ -26,6 +26,7 @@ import logging
 import corner
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
+from scipy.stats import entropy, gaussian_kde
 
 import pandas as pd
 import numpy as np
@@ -309,6 +310,8 @@ if __name__ == "__main__":
 
     dynesty_posterior = load_dynesty("/data/kn405/Code/peregrine_snpe/peregrine/peregrine")
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
+    print(dynesty_posterior.shape)
+    print(posterior_samples.shape)
 
     def crb_from_posterior_samples(posterior_samples):
         """
@@ -348,12 +351,46 @@ if __name__ == "__main__":
     # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
     # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
     
-    fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
-    corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
-    fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
-    blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
-    red_line = mlines.Line2D([], [], color='red', label='Dynesty')
-    fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
+    # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
+    # corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
+    # fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
+    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    # red_line = mlines.Line2D([], [], color='red', label='Dynesty')
+    # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
     #corner plot of posteriors
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
+
+    def js_divergence(samples_p, samples_q, num_points=1000):
+    # Define a common evaluation range
+        min_val = min(samples_p.min(), samples_q.min()) 
+        max_val = max(samples_p.max(), samples_q.max())
+        eval_points = np.linspace(min_val, max_val, num_points)
+        
+        # Estimate densities using KDE
+        kde_p = gaussian_kde(samples_p)
+        kde_q = gaussian_kde(samples_q)
+        
+        pdf_p = kde_p(eval_points)
+        pdf_q = kde_q(eval_points)
+        
+        # Normalize to ensure they sum to 1 (avoid numerical issues)
+        pdf_p /= pdf_p.sum()
+        pdf_q /= pdf_q.sum()
+        
+        # Compute mixed distribution
+        pdf_m = 0.5 * (pdf_p + pdf_q)
+        
+        # Compute KL divergences and JS divergence
+        kl_p_m = entropy(pdf_p, pdf_m)  # KL(P || M)
+        kl_q_m = entropy(pdf_q, pdf_m)  # KL(Q || M)
+        
+        js_div = 0.5 * (kl_p_m + kl_q_m)
+        return js_div
+
+    # Example usage with posterior samples
+    samples_p = np.random.normal(0, 1, 1000)  # Simulated posterior 1
+    samples_q = np.random.normal(1, 1, 1000)  # Simulated posterior 2
+
+    js_div = js_divergence(samples_p, samples_q)
+    print(f"Jensen-Shannon Divergence: {js_div:.4f}")
