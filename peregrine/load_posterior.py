@@ -418,7 +418,7 @@ if __name__ == "__main__":
         logratios = lrs.logratios[:,i].numpy()
         weights = np.exp(logratios)
         js_div_dyn += js_divergence(samples_p, samples_q)
-        js_div_per += js_divergence(samples_p, samples_t, weights)
+        js_div_per += js_divergence_hist(samples_p, samples_t, weights)
     
 
     js_div_dyn = js_div_dyn / 15
