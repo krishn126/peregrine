@@ -392,7 +392,7 @@ if __name__ == "__main__":
     js_div = 0.0
     for i in range(15):
         samples_p = posterior_samples[:,0,i].numpy()
-        samples_q = dynesty_posterior[:,i].numpy()
+        samples_q = dynesty_posterior[:,i]
         js_div += js_divergence(samples_p, samples_q)
 
     js_div = js_div / 15
