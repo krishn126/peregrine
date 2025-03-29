@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
 # Sample data
-x = np.array([134272, 26752, 13312, 6656, 2560, 1280, 128])  # simulation number variables
-y = np.array([-4.79168, -2.19829, -0.26212, 0.91438, 5.24674, 6.31091, 8.74037])  # val loss variables
+x = np.array([134272, 67072, 26752, 13312, 6656, 2560, 1280, 128])  # simulation number variables
+y = np.array([-4.79168, -3.5644, -2.19829, -0.26212, 0.91438, 5.24674, 6.31091, 8.74037])  # val loss variables
 
 approx_crb = 52.545037343796665
 y = y + approx_crb  # Shift the validation loss to be positive
