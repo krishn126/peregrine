@@ -461,4 +461,4 @@ if __name__ == "__main__":
     plt.ylabel("Empirical Coverage")
     plt.legend()
     plt.title("Coverage Test for Each Parameter")
-    plt.show()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
