@@ -14,7 +14,8 @@ import pickle
 import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator
-from sbi.analysis import sbc_rank_plot
+from sbi.diagnostics.tarp import run_tarp
+from sbi.analysis import plot_tarp
 
 from sbi.inference import SNPE
 import torch
@@ -436,53 +437,61 @@ if __name__ == "__main__":
     # print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
 
-    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 12)):
-        _, num_parameters = true_parameters.shape
-        num_levels = credibility_levels.shape[0]
-        empirical_coverages = torch.zeros(num_parameters, num_levels)
+    # def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 12)):
+    #     _, num_parameters = true_parameters.shape
+    #     num_levels = credibility_levels.shape[0]
+    #     empirical_coverages = torch.zeros(num_parameters, num_levels)
 
-        # Sort posterior samples along the sample axis
-        for j in range(num_sims):
-            posterior_samples = loaded_posterior.sample_batched(torch.Size([1000]), x=obs)
-            posterior_samples = posterior_samples.squeeze(1)
-            sorted_samples, _ = torch.sort(posterior_samples, dim=0)
-            num_samples, _ = sorted_samples.shape
+    #     # Sort posterior samples along the sample axis
+    #     for j in range(num_sims):
+    #         posterior_samples = loaded_posterior.sample_batched(torch.Size([1000]), x=obs)
+    #         posterior_samples = posterior_samples.squeeze(1)
+    #         sorted_samples, _ = torch.sort(posterior_samples, dim=0)
+    #         num_samples, _ = sorted_samples.shape
 
-            for i, level in enumerate(credibility_levels):
-                lower_idx = int((1 - level) / 2 * num_samples)
-                upper_idx = int((1 + level) / 2 * num_samples)
+    #         for i, level in enumerate(credibility_levels):
+    #             lower_idx = int((1 - level) / 2 * num_samples)
+    #             upper_idx = int((1 + level) / 2 * num_samples)
 
-                lower_bounds = sorted_samples[lower_idx, :]
-                upper_bounds = sorted_samples[upper_idx, :]
-                # Compute coverage per parameter
-                for k in range(num_parameters):
-                    if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
-                        empirical_coverages[k, i] += 1
+    #             lower_bounds = sorted_samples[lower_idx, :]
+    #             upper_bounds = sorted_samples[upper_idx, :]
+    #             # Compute coverage per parameter
+    #             for k in range(num_parameters):
+    #                 if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
+    #                     empirical_coverages[k, i] += 1
             
-        empirical_coverages /= num_sims
+    #     empirical_coverages /= num_sims
 
-        return credibility_levels.numpy(), empirical_coverages.numpy()
+    #     return credibility_levels.numpy(), empirical_coverages.numpy()
 
-    def plot_coverage(credibility_levels, empirical_coverages):
-        num_parameters = empirical_coverages.shape[0]
-        plt.figure(figsize=(15, 8))
-        # Plot coverage for each parameter
-        for i in range(num_parameters):
-            ax = plt.subplot(5, 3, i + 1)
-            ax.set_title(f"{order[i]}")
-            plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
-            plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
+    # def plot_coverage(credibility_levels, empirical_coverages):
+    #     num_parameters = empirical_coverages.shape[0]
+    #     plt.figure(figsize=(15, 8))
+    #     # Plot coverage for each parameter
+    #     for i in range(num_parameters):
+    #         ax = plt.subplot(5, 3, i + 1)
+    #         ax.set_title(f"{order[i]}")
+    #         plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
+    #         plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
             
         
-        plt.xlabel("Expected Coverage")
-        plt.ylabel("Empirical Coverage")
-        plt.suptitle("Coverage Test for Each Parameter")
-        plt.legend(loc="lower right", fontsize=8, ncol=2)  # Compact legend
-        plt.grid(True)
-        plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
+    #     plt.xlabel("Expected Coverage")
+    #     plt.ylabel("Empirical Coverage")
+    #     plt.suptitle("Coverage Test for Each Parameter")
+    #     plt.legend(loc="lower right", fontsize=8, ncol=2)  # Compact legend
+    #     plt.grid(True)
+    #     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
-    # Compute and plot empirical coverage
+    # # Compute and plot empirical coverage
  
-    true_params = true_params.repeat(1000, 1)
-    credibility_levels, empirical_coverages = compute_coverage_per_param(1000, true_params)
-    plot_coverage(credibility_levels, empirical_coverages)
+    # true_params = true_params.repeat(1000, 1)
+    # credibility_levels, empirical_coverages = compute_coverage_per_param(1000, true_params)
+    # plot_coverage(credibility_levels, empirical_coverages)
+
+    true_params = true_params.unsqueeze(0)
+    expected_coverage, ideal_coverage = run_tarp(
+    true_params,
+    obs,
+    loaded_posterior,
+    num_posterior_samples=1000,
+    )
