@@ -488,6 +488,7 @@ if __name__ == "__main__":
     # credibility_levels, empirical_coverages = compute_coverage_per_param(1000, true_params)
     # plot_coverage(credibility_levels, empirical_coverages)
 
+    obs = obs.unsqueeze(0)
     expected_coverage, ideal_coverage = run_tarp(
     true_params,
     obs,
