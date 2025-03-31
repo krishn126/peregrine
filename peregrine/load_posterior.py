@@ -448,17 +448,16 @@ if __name__ == "__main__":
             upper = np.percentile(posterior_i, (1 + alpha) / 2 * 100)
             coverage[i, j] = (lower <= true_value <= upper)  # 1 if within interval, else 0
 
-    # Compute empirical coverage (mean across different parameter dimensions)
-    coverage_mean = np.mean(coverage, axis=0)
-
     # Plot coverage per parameter
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(15, 8))
     for i in range(15):
+        ax = plt.subplot(5, 3, i + 1)
+        ax.set_title(f"{order[i]}")
         plt.plot(credible_levels, coverage[i, :], label=f"Param {i+1}")
+        plt.plot(credible_levels, credible_levels, "--", color="black", label="Ideal (y=x)")
 
-    plt.plot(credible_levels, credible_levels, "--", color="black", label="Ideal (y=x)")
+    plt.suptitle("Coverage Test for Each Parameter", fontsize=20)
     plt.xlabel("Nominal Credible Interval")
     plt.ylabel("Empirical Coverage")
     plt.legend()
-    plt.title("Coverage Test for Each Parameter")
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
