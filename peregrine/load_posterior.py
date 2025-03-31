@@ -489,12 +489,24 @@ if __name__ == "__main__":
     # plot_coverage(credibility_levels, empirical_coverages)
 
     obs = obs.unsqueeze(0)
-    expected_coverage, ideal_coverage = run_tarp(
-    true_params[:,0].reshape(1,-1),
-    obs,
-    loaded_posterior,
-    num_posterior_samples=1000,
-    )
+    coverage_results = []
+    for i in range(15):
+        theta_i = true_params[:, i].reshape(1)  # Extract single true parameter, shape [1]
 
-    fig, axes = plot_tarp(expected_coverage, ideal_coverage)
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
+        # Custom function to sample only the i-th dimension from the posterior
+        def single_param_posterior(x):
+            samples = loaded_posterior.sample((1000,), x=x)  # Get [1000, 15] samples
+            return samples[:, i].unsqueeze(-1)  # Extract only the i-th parameter → [1000, 1]
+
+        # Run TARP for the single parameter
+        expected_coverage, ideal_coverage = run_tarp(
+            theta_i.unsqueeze(0),  # Ensure shape [1, 1]
+            obs,                 # Keep x_obs the same
+            single_param_posterior, # Custom posterior function
+            num_posterior_samples=1000,
+        )
+
+        coverage_results.append((expected_coverage, ideal_coverage))
+
+    # fig, axes = plot_tarp(expected_coverage, ideal_coverage)
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
