@@ -490,14 +490,24 @@ if __name__ == "__main__":
 
     obs = obs.unsqueeze(0)
     coverage_results = []
+
+    class SingleParamPosterior:
+        def __init__(self, posterior, param_idx):
+            self.posterior = posterior  # Store original posterior
+            self.param_idx = param_idx  # Store which parameter to extract
+
+        def sample(self, sample_shape, x):
+            """Samples from the posterior and extracts only one parameter."""
+            full_samples = self.posterior.sample(sample_shape, x=x)  # Shape: [num_samples, 15]
+            return full_samples[:, self.param_idx].unsqueeze(-1)  # Extract single param → [num_samples, 1]
+
+        def sample_batched(self, sample_shape, x):
+            """Needed for TARP; calls sample()."""
+            return self.sample(sample_shape, x)
+    
     for i in range(15):
         theta_i = true_params[:, i].reshape(1)  # Extract single true parameter, shape [1]
-
-        # Custom function to sample only the i-th dimension from the posterior
-        def single_param_posterior(x):
-            samples = loaded_posterior.sample((1000,), x=x)  # Get [1000, 15] samples
-            return samples[:, i].unsqueeze(-1)  # Extract only the i-th parameter → [1000, 1]
-
+        single_param_posterior = SingleParamPosterior(loaded_posterior, i)
         # Run TARP for the single parameter
         expected_coverage, ideal_coverage = run_tarp(
             theta_i.unsqueeze(0),  # Ensure shape [1, 1]
