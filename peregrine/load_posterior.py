@@ -463,7 +463,7 @@ if __name__ == "__main__":
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
 
     def compute_coverage(posterior_samples, true_parameters, credibility_levels=[0.5, 0.9]):
-        num_samples, num_parameters = posterior_samples.shape
+        num_samples = posterior_samples[0]
         coverage_results = {}
 
         # Sort posterior samples along the sample axis
