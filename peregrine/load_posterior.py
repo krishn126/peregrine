@@ -14,7 +14,7 @@ import pickle
 import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator
-from sbi.utils import check_prior_normalization, expected_coverage
+# from sbi.utils import check_prior_normalization, expected_coverage
 
 from sbi.inference import SNPE
 import torch
