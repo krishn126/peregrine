@@ -456,8 +456,9 @@ if __name__ == "__main__":
                 upper_bounds = sorted_samples[upper_idx, :]
 
                 # Compute coverage per parameter
-                is_covered = (true_parameters[j] >= lower_bounds) & (true_parameters[j] <= upper_bounds)
-                empirical_coverages[:, i] += is_covered.float()  # Mean coverage for each parameter
+                for k in range(num_parameters):
+                    is_covered = (true_parameters[j,k] >= lower_bounds[k]) & (true_parameters[j] <= upper_bounds[k])
+                    empirical_coverages[k, i] += is_covered.float()  # Mean coverage for each parameter
             
         empirical_coverages /= num_sims
 
