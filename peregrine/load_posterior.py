@@ -446,7 +446,6 @@ if __name__ == "__main__":
             posterior_samples = loaded_posterior.sample_batched(torch.Size([1000]), x=obs)
             posterior_samples = posterior_samples.squeeze(1)
             sorted_samples, _ = torch.sort(posterior_samples, dim=0)
-            print(sorted_samples.shape)
             num_samples, _ = sorted_samples.shape
 
             for i, level in enumerate(credibility_levels):
@@ -455,8 +454,6 @@ if __name__ == "__main__":
 
                 lower_bounds = sorted_samples[lower_idx, :]
                 upper_bounds = sorted_samples[upper_idx, :]
-                print(lower_bounds)
-                print(upper_bounds)
                 # Compute coverage per parameter
                 for k in range(num_parameters):
                     if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
