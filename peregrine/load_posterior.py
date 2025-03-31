@@ -462,24 +462,31 @@ if __name__ == "__main__":
     plt.legend()
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
 
-    def compute_coverage_per_param(posterior_samples, true_parameters, credibility_levels=torch.linspace(0.1, 0.9, 9)):
-        num_samples, num_parameters = posterior_samples.shape
+    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.1, 0.9, 9)):
+        _, num_parameters = true_parameters.shape
         num_levels = credibility_levels.shape[0]
         empirical_coverages = torch.zeros(num_parameters, num_levels)
 
         # Sort posterior samples along the sample axis
-        sorted_samples, _ = torch.sort(posterior_samples, dim=0)
+        for j in range(num_sims):
+            
+            posterior_samples = loaded_posterior.sample_batched(torch.Size([1000]), x=obs)
+            posterior_samples = posterior_samples.squeeze(1)
+            sorted_samples, _ = torch.sort(posterior_samples, dim=0)
+            num_samples, _ = sorted_samples.shape
 
-        for i, level in enumerate(credibility_levels):
-            lower_idx = int((1 - level) / 2 * num_samples)
-            upper_idx = int((1 + level) / 2 * num_samples)
+            for i, level in enumerate(credibility_levels):
+                lower_idx = int((1 - level) / 2 * num_samples)
+                upper_idx = int((1 + level) / 2 * num_samples)
 
-            lower_bounds = sorted_samples[lower_idx, :]
-            upper_bounds = sorted_samples[upper_idx, :]
+                lower_bounds = sorted_samples[lower_idx, :]
+                upper_bounds = sorted_samples[upper_idx, :]
 
-            # Compute coverage per parameter
-            is_covered = (true_parameters >= lower_bounds) & (true_parameters <= upper_bounds)
-            empirical_coverages[:, i] = is_covered.float().mean(dim=0)  # Mean coverage for each parameter
+                # Compute coverage per parameter
+                is_covered = (true_parameters[j] >= lower_bounds) & (true_parameters[j] <= upper_bounds)
+                empirical_coverages[:, i] += is_covered.float()  # Mean coverage for each parameter
+            
+        empirical_coverages /= num_sims
 
         return credibility_levels.numpy(), empirical_coverages.numpy()
 
@@ -502,5 +509,8 @@ if __name__ == "__main__":
         plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
     # Compute and plot empirical coverage
+    true_params = true_params.repeat(100)
+    print(true_params.shape)
+    sys.exit()
     credibility_levels, empirical_coverages = compute_coverage_per_param(posterior_samples, true_params)
     plot_coverage(credibility_levels, empirical_coverages)
