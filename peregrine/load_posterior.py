@@ -462,33 +462,45 @@ if __name__ == "__main__":
     plt.legend()
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
 
-    def compute_coverage(posterior_samples, true_parameters, credibility_levels=[0.5, 0.9]):
-        num_samples = posterior_samples[0]
-        coverage_results = {}
+    def compute_coverage_per_param(posterior_samples, true_parameters, credibility_levels=torch.linspace(0.1, 0.9, 9)):
+        num_samples, num_parameters = posterior_samples.shape
+        num_levels = credibility_levels.shape[0]
+        empirical_coverages = torch.zeros(num_parameters, num_levels)
 
         # Sort posterior samples along the sample axis
         sorted_samples, _ = torch.sort(posterior_samples, dim=0)
 
-        for level in credibility_levels:
-            # Compute lower and upper bounds of the credible interval
+        for i, level in enumerate(credibility_levels):
             lower_idx = int((1 - level) / 2 * num_samples)
             upper_idx = int((1 + level) / 2 * num_samples)
 
             lower_bounds = sorted_samples[lower_idx, :]
             upper_bounds = sorted_samples[upper_idx, :]
 
-            # Check if true parameter falls within the interval
+            # Compute coverage per parameter
             is_covered = (true_parameters >= lower_bounds) & (true_parameters <= upper_bounds)
-            coverage_fraction = is_covered.float().mean().item()  # Average over all parameters
+            empirical_coverages[:, i] = is_covered.float().mean(dim=0)  # Mean coverage for each parameter
 
-            coverage_results[level] = coverage_fraction
+        return credibility_levels.numpy(), empirical_coverages.numpy()
 
-        return coverage_results
-    
-    coverage_per_param = np.zeros((15, 2))
+    def plot_coverage(credibility_levels, empirical_coverages):
+        num_parameters = empirical_coverages.shape[0]
+        plt.figure(figsize=(15, 8))
+        # Plot coverage for each parameter
+        for i in range(num_parameters):
+            ax = plt.subplot(5, 3, i + 1)
+            ax.set_title(f"{order[i]}")
+            plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {i+1}")
+            plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
+            
+        
+        plt.xlabel("Expected Coverage")
+        plt.ylabel("Empirical Coverage")
+        plt.suptitle("Coverage Test for Each Parameter")
+        plt.legend(loc="lower right", fontsize=8, ncol=2)  # Compact legend
+        plt.grid(True)
+        plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
-    for i in range(15):
-        coverage_per_param[i] = compute_coverage(posterior_samples[:,i], true_params[:,i], credibility_levels=[0.5, 0.9])
-
-    for level, emp_coverage in coverage_per_param.items():
-        print(f"Credible interval {level*100:.0f}%: Empirical coverage = {emp_coverage:.3f}")
+    # Compute and plot empirical coverage
+    credibility_levels, empirical_coverages = compute_coverage_per_param(posterior_samples, true_params)
+    plot_coverage(credibility_levels, empirical_coverages)
