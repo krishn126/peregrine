@@ -14,6 +14,7 @@ import pickle
 import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator
+from sbi.utils import check_prior_normalization, expected_coverage
 
 from sbi.inference import SNPE
 import torch
@@ -330,36 +331,6 @@ if __name__ == "__main__":
 
         return crb_approx
     
-    # posterior_samples = posterior_samples.squeeze(1)
-    # CRB = crb_from_posterior_samples(posterior_samples)
-    # print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
-
-    # fig = plt.figure(figsize=(15, 8))
-    # for idx in range(15):
-    #     ax = plt.subplot(5, 3, idx + 1)
-    #     ax.set_title(f"{order[idx]}")
-    #     logratios = lrs.logratios[:, idx]
-    #     params = lrs.params[:, idx, 0]
-    #     weights1 = np.ones_like(posterior_samples[:,0,idx])
-    #     weights2 = np.exp(logratios.numpy())
-    #     plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
-    #     plt.axvline(x=true_params[idx], linestyle='--')
-    # fig.suptitle("NPE vs TMNRE", fontsize=20)
-    # plt.tight_layout()
-    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
-    # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
-    # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
-    
-    # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
-    # corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
-    # fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
-    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
-    # red_line = mlines.Line2D([], [], color='red', label='Dynesty')
-    # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
-
-    #corner plot of posteriors
-    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
-
     def js_divergence(samples_p, samples_q, num_points=1000):
     # Define a common evaluation range
         min_val = min(samples_p.min(), samples_q.min()) 
@@ -405,27 +376,89 @@ if __name__ == "__main__":
         
         js_div = 0.5 * (kl_p_m + kl_q_m)
         return js_div
+    
+    # #CRB Bound
+    # posterior_samples = posterior_samples.squeeze(1)
+    # CRB = crb_from_posterior_samples(posterior_samples)
+    # print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
 
-    # Example usage with posterior samples
-    js_div_dyn = 0.0
-    js_div_per = 0.0
-    js_div_dynper = 0.0
+    # # Plot SNPE vs TMNRE posterior
+    # fig = plt.figure(figsize=(15, 8))
+    # for idx in range(15):
+    #     ax = plt.subplot(5, 3, idx + 1)
+    #     ax.set_title(f"{order[idx]}")
+    #     logratios = lrs.logratios[:, idx]
+    #     params = lrs.params[:, idx, 0]
+    #     weights1 = np.ones_like(posterior_samples[:,0,idx])
+    #     weights2 = np.exp(logratios.numpy())
+    #     plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
+    #     plt.axvline(x=true_params[idx], linestyle='--')
+    # fig.suptitle("NPE vs TMNRE", fontsize=20)
+    # plt.tight_layout()
+    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
+    # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
+    
+    # #Corner Plot of SNPE vs Dynesty
+    # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
+    # corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
+    # fig.suptitle('PROVISIONAL: SNPE vs Dynesty', fontsize=50)
+    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    # red_line = mlines.Line2D([], [], color='red', label='Dynesty')
+    # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
-    for i in range(15):
-        samples_p = posterior_samples[:,0,i].numpy()
-        samples_q = dynesty_posterior[:,i]
-        samples_t = lrs.params[:,i,0].numpy()
-        logratios = lrs.logratios[:,i].numpy()
-        weights = np.exp(logratios)
-        js_div_dyn += js_divergence(samples_p, samples_q)
-        js_div_per += js_divergence_hist(samples_p, samples_t, weights)
-        js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
+    # #Save Plots
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmrne.png", dpi=300, bbox_inches='tight')
+
+    # #JS Divergence Calculations 
+    # js_div_dyn = 0.0
+    # js_div_per = 0.0
+    # js_div_dynper = 0.0
+
+    # for i in range(15):
+    #     samples_p = posterior_samples[:,0,i].numpy()
+    #     samples_q = dynesty_posterior[:,i]
+    #     samples_t = lrs.params[:,i,0].numpy()
+    #     logratios = lrs.logratios[:,i].numpy()
+    #     weights = np.exp(logratios)
+    #     js_div_dyn += js_divergence(samples_p, samples_q)
+    #     js_div_per += js_divergence_hist(samples_p, samples_t, weights)
+    #     js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
     
 
-    js_div_dyn = js_div_dyn / 15
-    js_div_per = js_div_per / 15
-    js_div_dynper = js_div_dynper / 15
+    # js_div_dyn = js_div_dyn / 15
+    # js_div_per = js_div_per / 15
+    # js_div_dynper = js_div_dynper / 15
 
-    print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
-    print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
-    print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
+    # print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
+    # print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
+    # print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
+    
+    # #Coverage Test
+    posterior_samples = posterior_samples.squeeze(1)
+    credible_levels = np.linspace(0.05, 0.95, 10)
+    coverage = np.zeros((15, len(credible_levels))) 
+
+    for i in range(15):
+        true_value = true_params[0, i]  # True parameter value for parameter i
+        posterior_i = posterior_samples[:, i]  # All posterior samples for parameter i
+
+        for j, alpha in enumerate(credible_levels):
+            lower = np.percentile(posterior_i, (1 - alpha) / 2 * 100)
+            upper = np.percentile(posterior_i, (1 + alpha) / 2 * 100)
+            coverage[i, j] = (lower <= true_value <= upper)  # 1 if within interval, else 0
+
+    # Compute empirical coverage (mean across different parameter dimensions)
+    coverage_mean = np.mean(coverage, axis=0)
+
+    # Plot coverage per parameter
+    plt.figure(figsize=(10, 6))
+    for i in range(15):
+        plt.plot(credible_levels, coverage[i, :], label=f"Param {i+1}")
+
+    plt.plot(credible_levels, credible_levels, "--", color="black", label="Ideal (y=x)")
+    plt.xlabel("Nominal Credible Interval")
+    plt.ylabel("Empirical Coverage")
+    plt.legend()
+    plt.title("Coverage Test for Each Parameter")
+    plt.show()
