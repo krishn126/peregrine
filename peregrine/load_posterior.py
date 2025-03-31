@@ -457,8 +457,8 @@ if __name__ == "__main__":
 
                 # Compute coverage per parameter
                 for k in range(num_parameters):
-                    is_covered = (true_parameters[j,k] >= lower_bounds[k]) & (true_parameters[j] <= upper_bounds[k])
-                    empirical_coverages[k, i] += is_covered.float()  # Mean coverage for each parameter
+                    if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
+                        empirical_coverages[k, i] += 1
             
         empirical_coverages /= num_sims
 
