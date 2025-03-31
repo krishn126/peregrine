@@ -463,32 +463,3 @@ if __name__ == "__main__":
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
 
 
-    def compute_ranks(posterior_samples, true_parameters):
-        """
-        Compute ranks of the true parameters within the sorted posterior samples.
-        
-        Args:
-            posterior_samples: Tensor of shape [num_simulations, num_posterior_samples, num_parameters]
-            true_parameters: Tensor of shape [num_simulations, num_parameters]
-
-        Returns:
-            ranks: Tensor of shape [num_simulations, num_parameters]
-        """        
-        # Sort posterior samples along the sample dimension
-        sorted_samples, _ = torch.sort(posterior_samples, dim=0)  # [num_posterior_samples, num_parameters]
-        
-        # Compare true parameters with sorted posterior samples to find rank
-        ranks = (sorted_samples < true_parameters).sum(dim=0, keepdim=True)  # Count how many samples are smaller
-        
-        return ranks
-
-    # Compute ranks
-    ranks = compute_ranks(posterior_samples, true_params)
-
-    # Print rank shape to confirm it is [num_simulations, num_parameters]
-    print(ranks.shape)  # Should be [1, 15]
-
-    num_posterior_samples = posterior_samples.shape[0]
-
-    fig, axes = sbc_rank_plot(ranks=ranks, num_posterior_samples=num_posterior_samples)
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/rank_calibration_tests.png", dpi=300, bbox_inches='tight')
