@@ -435,32 +435,6 @@ if __name__ == "__main__":
     # print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
     # print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
-    # #Coverage Test
-    # posterior_samples = posterior_samples.squeeze(1)
-    # credible_levels = np.linspace(0.05, 0.95, 10)
-    # coverage = np.zeros((15, len(credible_levels))) 
-
-    # for i in range(15):
-    #     true_value = true_params[0, i]  # True parameter value for parameter i
-    #     posterior_i = posterior_samples[:, i]  # All posterior samples for parameter i
-    #     for j, alpha in enumerate(credible_levels):
-    #         lower = np.percentile(posterior_i, (1 - alpha) / 2 * 100)
-    #         upper = np.percentile(posterior_i, (1 + alpha) / 2 * 100)
-    #         coverage[i, j] = (lower <= true_value <= upper)
-
-    # # Plot coverage per parameter
-    # plt.figure(figsize=(15, 8))
-    # for i in range(15):
-    #     ax = plt.subplot(5, 3, i + 1)
-    #     ax.set_title(f"{order[i]}")
-    #     plt.plot(credible_levels, coverage[i, :], label=f"Param {i+1}")
-    #     plt.plot(credible_levels, credible_levels, "--", color="black", label="Ideal (y=x)")
-
-    # plt.suptitle("Coverage Test for Each Parameter", fontsize=20)
-    # plt.xlabel("Nominal Credible Interval")
-    # plt.ylabel("Empirical Coverage")
-    # plt.legend()
-    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
 
     def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.1, 0.9, 9)):
         _, num_parameters = true_parameters.shape
@@ -510,6 +484,8 @@ if __name__ == "__main__":
     # Compute and plot empirical coverage
  
     true_params = true_params.repeat(100, 1)
-
+    print(true_params)
     credibility_levels, empirical_coverages = compute_coverage_per_param(100, true_params)
+    print(empirical_coverages)
+    sys.exit()
     plot_coverage(credibility_levels, empirical_coverages)
