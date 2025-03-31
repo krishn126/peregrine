@@ -462,4 +462,30 @@ if __name__ == "__main__":
     plt.legend()
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
 
+    def compute_coverage(posterior_samples, true_parameters, credibility_levels=[0.5, 0.9]):
+        num_samples, num_parameters = posterior_samples.shape
+        coverage_results = {}
 
+        # Sort posterior samples along the sample axis
+        sorted_samples, _ = torch.sort(posterior_samples, dim=0)
+
+        for level in credibility_levels:
+            # Compute lower and upper bounds of the credible interval
+            lower_idx = int((1 - level) / 2 * num_samples)
+            upper_idx = int((1 + level) / 2 * num_samples)
+
+            lower_bounds = sorted_samples[lower_idx, :]
+            upper_bounds = sorted_samples[upper_idx, :]
+
+            # Check if true parameter falls within the interval
+            is_covered = (true_parameters >= lower_bounds) & (true_parameters <= upper_bounds)
+            coverage_fraction = is_covered.float().mean().item()  # Average over all parameters
+
+            coverage_results[level] = coverage_fraction
+
+        return coverage_results
+    
+    coverage_results = compute_coverage(posterior_samples, true_params, credibility_levels=[0.5, 0.9])
+
+    for level, emp_coverage in coverage_results.items():
+        print(f"Credible interval {level*100:.0f}%: Empirical coverage = {emp_coverage:.3f}")
