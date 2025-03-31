@@ -485,7 +485,10 @@ if __name__ == "__main__":
 
         return coverage_results
     
-    coverage_results = compute_coverage(posterior_samples, true_params, credibility_levels=[0.5, 0.9])
+    coverage_per_param = np.zeros((15, 2))
 
-    for level, emp_coverage in coverage_results.items():
+    for i in range(15):
+        coverage_per_param[i] = compute_coverage(posterior_samples[:,i], true_params[:,i], credibility_levels=[0.5, 0.9])
+
+    for level, emp_coverage in coverage_per_param.items():
         print(f"Credible interval {level*100:.0f}%: Empirical coverage = {emp_coverage:.3f}")
