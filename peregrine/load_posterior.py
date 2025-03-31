@@ -436,7 +436,7 @@ if __name__ == "__main__":
     # print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
 
-    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.1, 0.9, 9)):
+    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 12)):
         _, num_parameters = true_parameters.shape
         num_levels = credibility_levels.shape[0]
         empirical_coverages = torch.zeros(num_parameters, num_levels)
@@ -473,7 +473,7 @@ if __name__ == "__main__":
         for i in range(num_parameters):
             ax = plt.subplot(5, 3, i + 1)
             ax.set_title(f"{order[i]}")
-            plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {i+1}")
+            plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
             plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
             
         
@@ -486,6 +486,6 @@ if __name__ == "__main__":
 
     # Compute and plot empirical coverage
  
-    true_params = true_params.repeat(1, 1)
-    credibility_levels, empirical_coverages = compute_coverage_per_param(1, true_params)
+    true_params = true_params.repeat(1000, 1)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(1000, true_params)
     plot_coverage(credibility_levels, empirical_coverages)
