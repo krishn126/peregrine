@@ -28,7 +28,7 @@ import corner
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from scipy.stats import entropy, gaussian_kde
-from sbi.utils import expected_coverage
+from sbi.diagnostics import expected_coverage
 
 import pandas as pd
 import numpy as np
