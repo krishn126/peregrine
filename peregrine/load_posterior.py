@@ -28,7 +28,7 @@ import corner
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from scipy.stats import entropy, gaussian_kde
-from sbi.utils.sbiutils import expected_coverage
+# from sbi.utils.sbiutils import expected_coverage
 
 import pandas as pd
 import numpy as np
@@ -443,7 +443,10 @@ if __name__ == "__main__":
     for i in range(15):
         true_value = true_params[0, i]  # True parameter value for parameter i
         posterior_i = posterior_samples[:, i]  # All posterior samples for parameter i
-        coverage[i, :] = expected_coverage(true_value, posterior_i, credible_levels)
+        for j, alpha in enumerate(credible_levels):
+            lower = np.percentile(posterior_i, (1 - alpha) / 2 * 100)
+            upper = np.percentile(posterior_i, (1 + alpha) / 2 * 100)
+            coverage[i, j] = (lower <= true_value <= upper)
 
     # Plot coverage per parameter
     plt.figure(figsize=(15, 8))
