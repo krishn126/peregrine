@@ -495,3 +495,6 @@ if __name__ == "__main__":
     loaded_posterior,
     num_posterior_samples=1000,
     )
+
+    fig, axes = plot_tarp(expected_coverage, ideal_coverage)
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
