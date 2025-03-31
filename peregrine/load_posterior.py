@@ -490,7 +490,7 @@ if __name__ == "__main__":
 
     obs = obs.unsqueeze(0)
     expected_coverage, ideal_coverage = run_tarp(
-    true_params,
+    true_params[0],
     obs,
     loaded_posterior,
     num_posterior_samples=1000,
