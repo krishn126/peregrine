@@ -480,7 +480,7 @@ if __name__ == "__main__":
         sorted_samples, _ = torch.sort(posterior_samples, dim=0)  # [num_posterior_samples, num_parameters]
         
         # Compare true parameters with sorted posterior samples to find rank
-        ranks = (sorted_samples < true_parameters).sum(dim=1)  # Count how many samples are smaller
+        ranks = (sorted_samples < true_parameters.unsqueeze(1)).sum(dim=1)  # Count how many samples are smaller
         
         return ranks
 
@@ -489,3 +489,8 @@ if __name__ == "__main__":
 
     # Print rank shape to confirm it is [num_simulations, num_parameters]
     print(ranks.shape)  # Should be [1000, 15]
+
+    num_posterior_samples = posterior_samples.shape[0]
+
+    fig, axes = sbc_rank_plot(ranks=ranks, num_posterior_samples=num_posterior_samples)
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/rank_calibration_tests.png", dpi=300, bbox_inches='tight')
