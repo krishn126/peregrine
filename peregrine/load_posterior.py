@@ -485,8 +485,5 @@ if __name__ == "__main__":
     # Compute and plot empirical coverage
  
     true_params = true_params.repeat(100, 1)
-    print(true_params)
     credibility_levels, empirical_coverages = compute_coverage_per_param(100, true_params)
-    print(empirical_coverages)
-    sys.exit()
     plot_coverage(credibility_levels, empirical_coverages)
