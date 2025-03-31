@@ -509,7 +509,8 @@ if __name__ == "__main__":
         plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
     # Compute and plot empirical coverage
-    true_params = true_params.repeat(100)
+    # repeat true params 100 times to get a [100,15] tensor
+    true_params = torch.tensor([true_params]*100)
     print(true_params.shape)
     sys.exit()
     credibility_levels, empirical_coverages = compute_coverage_per_param(posterior_samples, true_params)
