@@ -14,7 +14,7 @@ import pickle
 import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator
-# from sbi.utils import check_prior_normalization, expected_coverage
+from sbi.analysis import sbc_rank_plot
 
 from sbi.inference import SNPE
 import torch
@@ -458,3 +458,31 @@ if __name__ == "__main__":
     plt.ylabel("Empirical Coverage")
     plt.legend()
     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/coverage_tests.png", dpi=300, bbox_inches='tight')
+
+    print(posterior_samples.shape)
+    print(true_params.shape)
+
+    def compute_ranks(posterior_samples, true_parameters):
+        """
+        Compute ranks of the true parameters within the sorted posterior samples.
+        
+        Args:
+            posterior_samples: Tensor of shape [num_simulations, num_posterior_samples, num_parameters]
+            true_parameters: Tensor of shape [num_simulations, num_parameters]
+
+        Returns:
+            ranks: Tensor of shape [num_simulations, num_parameters]
+        """        
+        # Sort posterior samples along the sample dimension
+        sorted_samples, _ = torch.sort(posterior_samples, dim=0)  # [num_posterior_samples, num_parameters]
+        
+        # Compare true parameters with sorted posterior samples to find rank
+        ranks = (sorted_samples < true_parameters).sum(dim=1)  # Count how many samples are smaller
+        
+        return ranks
+
+    # Compute ranks
+    ranks = compute_ranks(posterior_samples, true_params)
+
+    # Print rank shape to confirm it is [num_simulations, num_parameters]
+    print(ranks.shape)  # Should be [1000, 15]
