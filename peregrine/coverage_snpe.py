@@ -14,13 +14,12 @@ from datetime import datetime
 import glob
 from config_utils_snpe import read_config, init_config
 from simulator_utils_snpe import init_simulator
-from inference_utils_snpe import (
-    save_coverage,
+from inference_utils_snpe_custom import (
     setup_zarr_store,
     setup_dataloader,
-    setup_trainer,
-    init_network,
+    setup_density_estimator,
     load_bounds,
+    setup_scheduler,
 )
 import subprocess
 import psutil
