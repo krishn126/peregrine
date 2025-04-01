@@ -11,9 +11,9 @@ print(
 import sys
 import numpy as np
 from datetime import datetime
-import glob
+import swyft.lightning as sl
 from config_utils_snpe import read_config, init_config
-from simulator_utils_snpe import init_simulator
+from simulator_utils_snpe import init_simulator, simulate
 from inference_utils_snpe_custom import (
     setup_zarr_store,
     setup_dataloader,
@@ -27,69 +27,99 @@ import time
 from matplotlib import pyplot as plt
 import torch
 import torch.nn.functional as F
+import subprocess
+import psutil
+import logging
+import pickle
+
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    n_samples = int(args[1])
     print(
-        f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [coverage.py] | Running coverage tests on {n_samples} samples per round"
+        f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Reading config file"
     )
-    print(
-        f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [coverage.py] | Reading config file"
-    )
-    # Load and parse config file
+    print(f"Config: {args[0]}")
     snpe_parser = read_config(args)
     conf = init_config(snpe_parser, args)
-    conf["snpe"]["shuffling"] = False
-    round_id = int(conf["snpe"]["num_rounds"])
-    bounds = load_bounds(conf, round_id)
-    simulator = init_simulator(conf, bounds)
-    print(
-        f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [coverage.py] | Initialising coverage zarrstore for round {round_id}"
+    logging.basicConfig(
+        filename=f"{conf['zarr_params']['store_path']}/log_{conf['zarr_params']['run_id']}.log",
+        filemode="w",
+        format="%(asctime)s | %(levelname)s: %(message)s",
+        datefmt="%m/%d/%Y %I:%M:%S %p",
+        level=logging.INFO,
     )
-    coverage_store = setup_zarr_store(
-        conf, simulator, round_id=round_id, coverage=True, n_sims=n_samples
-    )
-    print(
-        f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [coverage.py] | Simulating coverage observations for round {round_id}"
-    )
-    if conf["zarr_params"]["njobs"] == -1:
-        njobs = psutil.cpu_count(logical=True)
-    elif conf["zarr_params"]["njobs"] > psutil.cpu_count(logical=False):
-        njobs = psutil.cpu_count(logical=True)
-    elif conf["zarr_params"]["run_parallel"]:
-        njobs = conf["zarr_params"]["njobs"]
-    else:
-        njobs = 1
-    while coverage_store.sims_required > 0:
-        processes = []
-        print(
-            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [coverage.py] | (Re)starting {njobs} simulation batches. {coverage_store.sims_required} simulations still required"
+    simulator = init_simulator(conf)
+    bounds = None
+    if conf["snpe"]["generate_obs"]:
+        obs = simulator.generate_observation()
+        logging.warning(
+            f"Overwriting observation file: {conf['zarr_params']['store_path']}/observation_{conf['zarr_params']['run_id']}"
         )
-        for job in range(njobs):
-            p = subprocess.Popen(
-                [
-                    "python",
-                    "run_parallel.py",
-                    f"{conf['zarr_params']['store_path']}/config_{conf['zarr_params']['run_id']}.txt",
-                    str(round_id),
-                    f"coverage",
-                ]
+        with open(
+            f"{conf['zarr_params']['store_path']}/observation_{conf['zarr_params']['run_id']}",
+            "wb",
+        ) as f:
+            pickle.dump(obs, f)
+    else:
+        observation_path = conf["snpe"]["obs_path"]
+        with open(observation_path, "rb") as f:
+            obs = pickle.load(f)
+        subprocess.run(
+            f"cp {observation_path} {conf['zarr_params']['store_path']}/observation_{conf['zarr_params']['run_id']}",
+            shell=True,
+        )
+    logging.info(
+        f"Observation loaded and saved in {conf['zarr_params']['store_path']}/observation_{conf['zarr_params']['run_id']}"
+    )
+    obs = sl.Sample(
+        {key: obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
+    )
+    for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
+        # Initialise the zarr store to save the simulations
+        start_time = datetime.now()
+        print(
+            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Initialising zarrstore for round {round_id}"
+        )
+        store = setup_zarr_store(conf, simulator, round_id=round_id)
+        logging.info(f"Starting simulations for round {round_id}")
+        print(
+            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Simulating data for round {round_id}"
+        )
+        if conf["zarr_params"]["run_parallel"]:
+            print(
+                f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Running in parallel - spawning processes"
             )
-            processes.append(p)
-        status_array = np.array([None for p in processes])
-        while np.all(status_array == None) and len(status_array) != 0:
-            time.sleep(60)
-            status_array = np.array([p.poll() for p in processes])
-        for p in processes:
-            p.kill()
-
-    print(
-        f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [coverage.py] | Setting up dataloaders for round {round_id}"
-    )
-    train_data, val_data, trainer_dir = setup_dataloader(
-        coverage_store, simulator, conf, round_id
-    )
+            processes = []
+            if conf["zarr_params"]["njobs"] == -1:
+                njobs = psutil.cpu_count(logical=True)
+            elif conf["zarr_params"]["njobs"] > psutil.cpu_count(logical=False):
+                njobs = psutil.cpu_count(logical=True)
+            else:
+                njobs = conf["zarr_params"]["njobs"]
+            for job in range(njobs):
+                p = subprocess.Popen(
+                    [
+                        "python",
+                        "run_parallel_snpe.py",
+                        f"{conf['zarr_params']['store_path']}/config_{conf['zarr_params']['run_id']}.txt",
+                        str(round_id),
+                    ]
+                )
+                processes.append(p)
+            for p in processes:
+                p.wait()
+        else:
+            bounds = load_bounds(conf, round_id)
+            simulator = init_simulator(conf, bounds)
+            simulate(simulator, store, conf)
+        logging.info(f"Simulations for round {round_id} completed")
+        # Initialise data loader for training
+        print(
+            f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Setting up dataloaders for round {round_id}"
+        )
+        train_data, val_data, trainer_dir = setup_dataloader(
+            store, simulator, conf, round_id
+        )
 
     order = [
         "mass_ratio",
