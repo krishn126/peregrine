@@ -435,102 +435,101 @@ if __name__ == "__main__":
     # print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
     # print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
+    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 12)):
+        _, num_parameters = true_parameters.shape
+        num_levels = credibility_levels.shape[0]
+        empirical_coverages = torch.zeros(num_parameters, num_levels)
 
-    # def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 12)):
-    #     _, num_parameters = true_parameters.shape
-    #     num_levels = credibility_levels.shape[0]
-    #     empirical_coverages = torch.zeros(num_parameters, num_levels)
+        # Sort posterior samples along the sample axis
+        for j in range(num_sims):
+            posterior_samples = loaded_posterior.sample_batched(torch.Size([1000]), x=obs)
+            posterior_samples = posterior_samples.squeeze(1)
+            sorted_samples, _ = torch.sort(posterior_samples, dim=0)
+            num_samples, _ = sorted_samples.shape
 
-    #     # Sort posterior samples along the sample axis
-    #     for j in range(num_sims):
-    #         posterior_samples = loaded_posterior.sample_batched(torch.Size([1000]), x=obs)
-    #         posterior_samples = posterior_samples.squeeze(1)
-    #         sorted_samples, _ = torch.sort(posterior_samples, dim=0)
-    #         num_samples, _ = sorted_samples.shape
+            for i, level in enumerate(credibility_levels):
+                lower_idx = int((1 - level) / 2 * num_samples)
+                upper_idx = int((1 + level) / 2 * num_samples)
 
-    #         for i, level in enumerate(credibility_levels):
-    #             lower_idx = int((1 - level) / 2 * num_samples)
-    #             upper_idx = int((1 + level) / 2 * num_samples)
-
-    #             lower_bounds = sorted_samples[lower_idx, :]
-    #             upper_bounds = sorted_samples[upper_idx, :]
-    #             # Compute coverage per parameter
-    #             for k in range(num_parameters):
-    #                 if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
-    #                     empirical_coverages[k, i] += 1
+                lower_bounds = sorted_samples[lower_idx, :]
+                upper_bounds = sorted_samples[upper_idx, :]
+                # Compute coverage per parameter
+                for k in range(num_parameters):
+                    if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
+                        empirical_coverages[k, i] += 1
             
-    #     empirical_coverages /= num_sims
+        empirical_coverages /= num_sims
 
-    #     return credibility_levels.numpy(), empirical_coverages.numpy()
+        return credibility_levels.numpy(), empirical_coverages.numpy()
 
-    # def plot_coverage(credibility_levels, empirical_coverages):
-    #     num_parameters = empirical_coverages.shape[0]
-    #     plt.figure(figsize=(15, 8))
-    #     # Plot coverage for each parameter
-    #     for i in range(num_parameters):
-    #         ax = plt.subplot(5, 3, i + 1)
-    #         ax.set_title(f"{order[i]}")
-    #         plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
-    #         plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
+    def plot_coverage(credibility_levels, empirical_coverages):
+        num_parameters = empirical_coverages.shape[0]
+        plt.figure(figsize=(15, 8))
+        # Plot coverage for each parameter
+        for i in range(num_parameters):
+            ax = plt.subplot(5, 3, i + 1)
+            ax.set_title(f"{order[i]}")
+            plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
+            plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
             
         
-    #     plt.xlabel("Expected Coverage")
-    #     plt.ylabel("Empirical Coverage")
-    #     plt.suptitle("Coverage Test for Each Parameter")
-    #     plt.legend(loc="lower right", fontsize=8, ncol=2)  # Compact legend
-    #     plt.grid(True)
-    #     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
+        plt.xlabel("Expected Coverage")
+        plt.ylabel("Empirical Coverage")
+        plt.suptitle("Coverage Test for Each Parameter")
+        plt.legend(loc="lower right", fontsize=8, ncol=2)  # Compact legend
+        plt.grid(True)
+        plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
-    # # Compute and plot empirical coverage
+    # Compute and plot empirical coverage
  
-    # true_params = true_params.repeat(1000, 1)
-    # credibility_levels, empirical_coverages = compute_coverage_per_param(1000, true_params)
-    # plot_coverage(credibility_levels, empirical_coverages)
+    true_params = true_params.repeat(1000, 1)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(1000, true_params)
+    plot_coverage(credibility_levels, empirical_coverages)
 
-    obs = obs.unsqueeze(0)
-    coverage_results = []
+    # obs = obs.unsqueeze(0)
+    # coverage_results = []
 
-    class SingleParamPosterior:
-        def __init__(self, posterior, param_idx):
-            self.posterior = posterior  # Store original posterior
-            self.param_idx = param_idx  # Store which parameter to extract
+    # class SingleParamPosterior:
+    #     def __init__(self, posterior, param_idx):
+    #         self.posterior = posterior  # Store original posterior
+    #         self.param_idx = param_idx  # Store which parameter to extract
 
-        def sample(self, sample_shape, x):
-            """Samples from the posterior and extracts only one parameter."""
-            full_samples = self.posterior.sample(sample_shape, x=x)  # Shape: [num_samples, 15]
-            return full_samples[:, self.param_idx].unsqueeze(-1)  # Extract single param → [num_samples, 1]
+    #     def sample(self, sample_shape, x):
+    #         """Samples from the posterior and extracts only one parameter."""
+    #         full_samples = self.posterior.sample(sample_shape, x=x)  # Shape: [num_samples, 15]
+    #         return full_samples[:, self.param_idx].unsqueeze(-1)  # Extract single param → [num_samples, 1]
 
-        def sample_batched(self, sample_shape, x, **kwargs):
-            """Needed for TARP; calls sample()."""
-            full_samples = self.posterior.sample_batched(sample_shape, x=x)
-            return full_samples[:, :, self.param_idx].unsqueeze(1)
+    #     def sample_batched(self, sample_shape, x, **kwargs):
+    #         """Needed for TARP; calls sample()."""
+    #         full_samples = self.posterior.sample_batched(sample_shape, x=x)
+    #         return full_samples[:, :, self.param_idx].unsqueeze(1)
 
-    for i in range(15):
-        theta_i = true_params[:, i].reshape(1)  # Extract single true parameter, shape [1]
-        single_param_posterior = SingleParamPosterior(loaded_posterior, i)
-        # Run TARP for the single parameter
-        expected_coverage, ideal_coverage = run_tarp(
-            theta_i.unsqueeze(0),  # Ensure shape [1, 1]
-            obs,                 # Keep x_obs the same
-            single_param_posterior, # Custom posterior function
-            num_posterior_samples=1000,
-        )
+    # for i in range(15):
+    #     theta_i = true_params[:, i].reshape(1)  # Extract single true parameter, shape [1]
+    #     single_param_posterior = SingleParamPosterior(loaded_posterior, i)
+    #     # Run TARP for the single parameter
+    #     expected_coverage, ideal_coverage = run_tarp(
+    #         theta_i.unsqueeze(0),  # Ensure shape [1, 1]
+    #         obs,                 # Keep x_obs the same
+    #         single_param_posterior, # Custom posterior function
+    #         num_posterior_samples=1000,
+    #     )
 
-        coverage_results.append((expected_coverage, ideal_coverage))
+    #     coverage_results.append((expected_coverage, ideal_coverage))
 
-    fig, axes = plt.subplots(5, 3, figsize=(12, 15))  # Adjust size as needed
+    # fig, axes = plt.subplots(5, 3, figsize=(12, 15))  # Adjust size as needed
 
-    for i in range(15):
-        expected_coverage, ideal_coverage = coverage_results[i]
-        ax = axes[i // 3, i % 3]        
-        ax.set_title(f"{order[i]}")
-        ax.plot(ideal_coverage, expected_coverage, label="Empirical Coverage", color="blue")
-        ax.plot([0, 1], [0, 1], "--", color="black", label="Ideal (y=x)")  # Reference lines
-        ax.set_xlabel("Nominal Credible Interval")
-        ax.set_ylabel("Empirical Coverage")
-        ax.set_xlim(0, 1)  # X-axis range: [0,1]
-        ax.set_ylim(0, 1)  # Y-axis range: [0,1]
-        ax.legend()
+    # for i in range(15):
+    #     expected_coverage, ideal_coverage = coverage_results[i]
+    #     ax = axes[i // 3, i % 3]        
+    #     ax.set_title(f"{order[i]}")
+    #     ax.plot(ideal_coverage, expected_coverage, label="Empirical Coverage", color="blue")
+    #     ax.plot([0, 1], [0, 1], "--", color="black", label="Ideal (y=x)")  # Reference lines
+    #     ax.set_xlabel("Nominal Credible Interval")
+    #     ax.set_ylabel("Empirical Coverage")
+    #     ax.set_xlim(0, 1)  # X-axis range: [0,1]
+    #     ax.set_ylim(0, 1)  # Y-axis range: [0,1]
+    #     ax.legend()
 
-    plt.tight_layout()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
+    # plt.tight_layout()
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
