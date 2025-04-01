@@ -282,7 +282,6 @@ if __name__ == "__main__":
     loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/density_estimator.pt')
     loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
-
     #save posterior samples
     np.save('/data/kn405/Code/peregrine//peregrine/posterior_samples.npy', posterior_samples)
 
@@ -501,10 +500,11 @@ if __name__ == "__main__":
             full_samples = self.posterior.sample(sample_shape, x=x)  # Shape: [num_samples, 15]
             return full_samples[:, self.param_idx].unsqueeze(-1)  # Extract single param → [num_samples, 1]
 
-        def sample_batched(self, sample_shape, x):
+        def sample_batched(self, sample_shape, x, **kwargs):
             """Needed for TARP; calls sample()."""
-            return self.sample(sample_shape, x)
-    
+            full_samples = self.posterior.sample_batched(sample_shape, x=x)
+            return full_samples[:, :, self.param_idx].unsqueeze(-1)
+
     for i in range(15):
         theta_i = true_params[:, i].reshape(1)  # Extract single true parameter, shape [1]
         single_param_posterior = SingleParamPosterior(loaded_posterior, i)
@@ -518,5 +518,19 @@ if __name__ == "__main__":
 
         coverage_results.append((expected_coverage, ideal_coverage))
 
-    # fig, axes = plot_tarp(expected_coverage, ideal_coverage)
-    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
+    fig, axes = plt.subplots(5, 3, figsize=(12, 15))  # Adjust size as needed
+
+    for i in range(15):
+        expected_coverage, ideal_coverage = coverage_results[i]
+        ax = axes[i // 3, i % 3]        
+        ax.set_title(f"{order[i]}")
+        ax.plot(ideal_coverage, expected_coverage, label="Empirical Coverage", color="blue")
+        ax.plot([0, 1], [0, 1], "--", color="black", label="Ideal (y=x)")  # Reference lines
+        ax.set_xlabel("Nominal Credible Interval")
+        ax.set_ylabel("Empirical Coverage")
+        ax.set_xlim(0, 1)  # X-axis range: [0,1]
+        ax.set_ylim(0, 1)  # Y-axis range: [0,1]
+        ax.legend()
+
+    plt.tight_layout()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
