@@ -503,7 +503,7 @@ if __name__ == "__main__":
         def sample_batched(self, sample_shape, x, **kwargs):
             """Needed for TARP; calls sample()."""
             full_samples = self.posterior.sample_batched(sample_shape, x=x)
-            return full_samples[:, :, self.param_idx].unsqueeze(-1)
+            return full_samples[:, :, self.param_idx].unsqueeze(1)
 
     for i in range(15):
         theta_i = true_params[:, i].reshape(1)  # Extract single true parameter, shape [1]
