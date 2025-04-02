@@ -31,7 +31,151 @@ import subprocess
 import psutil
 import logging
 import pickle
+import torch.distributions as dist
 
+ranges = [
+        (0.125, 1.0),  # mass_ratio
+        (30.0, 35.0),  # chirp_mass
+        (0.0, 3.14159/2),  # theta_jn
+        (0.0, 6.28318),  # phase
+        (0.0, 3.14159),  # tilt_1
+        (0.0, 3.14159),  # tilt_2
+        (0.05, 1.0),  # a_1
+        (0.05, 1.0),  # a_2
+        (0.0, 6.28318),  # phi_12
+        (0.0, 6.28318/2),  # phi_jl
+        (600.0, 1200.0),  # luminosity_distance
+        (-0.05, 0.2),  # dec
+        (5.4, 5.8),  # ra
+        (0.0, 3.14159),  # psi
+        (-0.005, 0.005),  # geocent_time
+    ]
+
+class SineDistribution(dist.Distribution):
+    """
+    Custom sine-distributed probability distribution over [0, pi],
+    defined by p(x) = (1/2) * sin(x).
+    """   
+    support = dist.constraints.interval(torch.tensor([0.0]), torch.pi)  # Support is [0, pi]
+
+    def __init__(self, validate_args=None):
+        self.low = torch.tensor([0.0]) # Lower bound
+        self.high = torch.pi
+        super().__init__(validate_args=validate_args)
+        
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Uses inverse CDF sampling: x = arccos(1 - U), where U ~ Uniform(0,1)
+        """
+        u = torch.rand(sample_shape)
+        return torch.acos(1 - u)  # Returns samples in [0, pi]
+
+    def log_prob(self, x):
+        """
+        Log probability of the sine distribution: log( (1/2) * sin(x) )
+        """
+        inside_support = (x >= torch.tensor([0.0])) & (x <= torch.pi)
+        log_probs = torch.where(
+            inside_support,
+            torch.log(torch.tensor([0.5]) * torch.sin(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+        )
+        return log_probs 
+
+class CosineDistribution(dist.Distribution):
+    """
+    Custom cosine-distributed probability distribution over [-pi/2, pi/2],
+    defined by p(x) = (1/2) * cos(x).
+    """
+    support = dist.constraints.interval(-torch.pi / 2, torch.pi / 2)  # Support is [-π/2, π/2]
+
+    def __init__(self, validate_args=None):
+        self.low = -torch.pi / 2  # Lower bound
+        self.high = torch.pi / 2
+        super().__init__(validate_args=validate_args)
+        
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Uses inverse CDF sampling: x = arcsin(2U - 1), where U ~ Uniform(0,1)
+        """
+        u = torch.rand(sample_shape)
+        return torch.asin(2 * u - 1)  # Returns samples in [-π/2, π/2]
+
+    def log_prob(self, x):
+        """
+        Log probability of the cosine distribution: log( (1/2) * cos(x) )
+        """
+        inside_support = (x >= -torch.pi / 2) & (x <= torch.pi / 2)
+        log_probs = torch.where(
+            inside_support,
+            torch.log(torch.tensor([0.5]) * torch.cos(x)),  # log(p(x))
+            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+        )
+        return log_probs
+
+class JointPriorTensor(dist.Distribution):
+
+    lows = torch.tensor([r[0] for r in ranges])
+    highs = torch.tensor([r[1] for r in ranges])
+    support = dist.constraints.independent(dist.constraints.interval(lows, highs), 1)
+
+    def __init__(self, priors, keys_order=None):
+        """
+        Args:
+            priors (dict): A dictionary of individual priors.
+            keys_order (list, optional): An ordered list of keys to define
+                the order in which samples are stacked. If None, uses
+                list(priors.keys()).
+        """
+        self.priors = priors
+        if keys_order is None:
+            keys_order = list(priors.keys())
+        self.keys_order = keys_order
+        lows = torch.tensor([priors[key].low for key in self.keys_order])
+        highs = torch.tensor([priors[key].high for key in self.keys_order])
+        super().__init__()
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Sample from each individual prior and stack the results into a single tensor.
+        
+        Returns:
+            Tensor of shape sample_shape + (num_priors,)
+        """
+        samples_list = []
+        for key in self.keys_order:
+            # Sample from the individual prior.
+            sample_val = self.priors[key].sample(sample_shape)
+            # If the sample has an extra dimension (e.g., shape (..., 1)), squeeze it.
+            if sample_val.ndim > len(sample_shape):
+                sample_val = sample_val.squeeze(-1)
+            samples_list.append(sample_val)
+        # Stack along the last dimension so that each sample is a vector.
+        samples_tensor = torch.stack(samples_list, dim=-1)
+        return samples_tensor
+        
+    def log_prob(self, samples_tensor):
+        """
+        Computes the joint log probability by splitting the tensor and summing
+        individual log probabilities.
+        
+        Args:
+            samples_tensor (Tensor): A tensor of shape sample_shape + (num_priors,)
+            
+        Returns:
+            A tensor of shape sample_shape with the joint log probability.
+        """
+        log_probs = []
+        for i, key in enumerate(self.keys_order):
+            # Extract the sample corresponding to the i-th prior.
+            sample_val = samples_tensor[..., i]
+            log_prob_val = self.priors[key].log_prob(sample_val)
+            log_probs.append(log_prob_val)
+        # Sum the log probabilities (since the priors are independent).
+        total_log_prob = sum(log_probs)
+        return total_log_prob
 
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -121,6 +265,27 @@ if __name__ == "__main__":
             store, simulator, conf, round_id
         )
 
+    priors = {
+                "mass_ratio": dist.Uniform(torch.tensor([0.125]), torch.tensor([1.0])),
+                "chirp_mass": dist.Uniform(torch.tensor([25.0]), torch.tensor([100.0])),
+                "theta_jn": SineDistribution(), 
+                "phase": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+                "tilt_1": SineDistribution(),
+                "tilt_2": SineDistribution(),
+                "a_1": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+                "a_2": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+                "phi_12": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+                "phi_jl": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+                "luminosity_distance": dist.Uniform(torch.tensor([100.0]), torch.tensor([1500.0])),
+                "dec": CosineDistribution(),  # Assuming it already has event_shape=(1,)
+                "ra": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+                "psi": dist.Uniform(torch.tensor([0.0]), torch.tensor([3.14159])),
+                "geocent_time": dist.Uniform(torch.tensor([-0.1]), torch.tensor([0.1])),
+            }
+
+    # Define a fixed ordering for the parameters.
+    
+    # Create a joint prior distribution    
     order = [
         "mass_ratio",
         "chirp_mass",
@@ -139,26 +304,7 @@ if __name__ == "__main__":
         "geocent_time",
     ]
 
-    true_params = [
-        0.8857620985418904,
-        32.136969061169324,
-        0.44320777946320117,
-        5.089358282766109,
-        1.4974326044527126,
-        1.1019600169566186,
-        0.9701993491043245,
-        0.8117959745751914,
-        6.220246980963511,
-        1.884805935473119,
-        900,
-        0.07084716171380845,
-        5.555599820502261,
-        1.0995170458005799,
-        0.0
-    ]
-
-    #turn true_params into [1,15] torch tensor
-    true_params = torch.tensor([true_params])
+    joint_prior = JointPriorTensor(priors, keys_order=order)
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -196,63 +342,32 @@ if __name__ == "__main__":
 
         return d
     
-    obs = (
-            {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
-        )
-
-    obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
-    obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
-    obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
-    obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
-    obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
-    obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
-
-    obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-    obs = torch.cat(obs, dim=1)
-    
     loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/density_estimator.pt')
     loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/posterior.pt')
-
-    ranges = [
-        (0.125, 1.0),  # mass_ratio
-        (30.0, 35.0),  # chirp_mass
-        (0.0, 3.14159/2),  # theta_jn
-        (0.0, 6.28318),  # phase
-        (0.0, 3.14159),  # tilt_1
-        (0.0, 3.14159),  # tilt_2
-        (0.05, 1.0),  # a_1
-        (0.05, 1.0),  # a_2
-        (0.0, 6.28318),  # phi_12
-        (0.0, 6.28318/2),  # phi_jl
-        (600.0, 1200.0),  # luminosity_distance
-        (-0.05, 0.2),  # dec
-        (5.4, 5.8),  # ra
-        (0.0, 3.14159),  # psi
-        (-0.005, 0.005),  # geocent_time
-    ]
-
     limit = 1
 
     for i, sample in enumerate(train_data):
         if i > limit:
             break
-        theta_train = get_theta(sample).to('cuda')
-        x_train = get_data(sample).to('cuda') 
+        theta_train = get_theta(sample)
+        x_train = get_data(sample)
     
-    print(f"theta_train: {theta_train.shape}")
-    print(f"x_train: {x_train.shape}")
-    sys.exit()
+    posterior_samples = []
+    for j in range(30):
+            tester = x_train[j, :, :]
+            posterior_samples.append(loaded_posterior.sample_batched(torch.Size([100]), x=tester))
     
-    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 12)):
+    
+    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 15)):
         _, num_parameters = true_parameters.shape
         num_levels = credibility_levels.shape[0]
         empirical_coverages = torch.zeros(num_parameters, num_levels)
 
         # Sort posterior samples along the sample axis
         for j in range(num_sims):
-            posterior_samples = loaded_posterior.sample_batched(torch.Size([1000]), x=obs)
-            posterior_samples = posterior_samples.squeeze(1)
-            sorted_samples, _ = torch.sort(posterior_samples, dim=0)
+            post_samples = posterior_samples[j]
+            post_samples = post_samples.squeeze(1)
+            sorted_samples, _ = torch.sort(post_samples, dim=0)
             num_samples, _ = sorted_samples.shape
 
             for i, level in enumerate(credibility_levels):
@@ -279,17 +394,14 @@ if __name__ == "__main__":
             ax.set_title(f"{order[i]}")
             plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
             plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
-            
-        
+            plt.grid(True)
+
         plt.xlabel("Expected Coverage")
         plt.ylabel("Empirical Coverage")
         plt.suptitle("Coverage Test for Each Parameter")
-        plt.legend(loc="lower right", fontsize=8, ncol=2)  # Compact legend
-        plt.grid(True)
         plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
     # Compute and plot empirical coverage
  
-    true_params = true_params.repeat(1000, 1)
-    credibility_levels, empirical_coverages = compute_coverage_per_param(1000, true_params)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(30, theta_train)
     plot_coverage(credibility_levels, empirical_coverages)
