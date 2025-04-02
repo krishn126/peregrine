@@ -353,7 +353,7 @@ if __name__ == "__main__":
         x_train = get_data(sample)
     
     posterior_samples = []
-    for j in range(30):
+    for j in range(40):
             tester = x_train[j, :, :]
             posterior_samples.append(loaded_posterior.sample_batched(torch.Size([100]), x=tester))
     
@@ -391,17 +391,16 @@ if __name__ == "__main__":
         # Plot coverage for each parameter
         for i in range(num_parameters):
             ax = plt.subplot(5, 3, i + 1)
-            ax.set_title(f"{order[i]}")
+            ax.set_title(f"{order[i]}", fontsize=10)
             plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
             plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
             plt.grid(True)
 
-        plt.xlabel("Expected Coverage")
-        plt.ylabel("Empirical Coverage")
         plt.suptitle("Coverage Test for Each Parameter")
+        plt.tight_layout()
         plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
     # Compute and plot empirical coverage
  
-    credibility_levels, empirical_coverages = compute_coverage_per_param(30, theta_train)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(40, theta_train)
     plot_coverage(credibility_levels, empirical_coverages)
