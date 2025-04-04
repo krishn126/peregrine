@@ -6,32 +6,46 @@ from scipy.stats import linregress
 x = np.array([134272, 67072, 26752, 13312, 6656, 2560, 1280, 128])  # simulation number variables
 y = np.array([-4.79168, -3.5644, -2.19829, -0.26212, 0.91438, 5.24674, 6.31091, 8.74037])  # val loss variables
 
+x_1 = np.array([134272, 67072, 26752, 13312, 6656, 2560, 1280, 128])  # simulation number variables
+y_1 = np.array([-5.79168, -4.5644, -3.19829, -1.26212, 1.91438, 6.24674, 7.31091, 9.74037])  # val loss variables
+
 approx_crb = 52.545037343796665
-y = y + approx_crb  # Shift the validation loss to be positive
+y = y + approx_crb  # Shift the validation loss 
+y_1 = y_1 + approx_crb  # Shift the validation loss 
 # Take log of the data
 log_x = np.log(x)
 log_y = np.log(y)
 
+log_x_1 = np.log(x_1)
+log_y_1 = np.log(y_1)
 # Perform linear regression in log space
 slope, intercept, r_value, _, _ = linregress(log_x, log_y)
+slope_1, intercept_1, r_value_1, _, _ = linregress(log_x_1, log_y_1)
 
 # Generate best-fit line in log space
 x_fit = np.logspace(np.log10(min(x)), np.log10(max(x)), 100)  # Log-spaced x values
 y_fit = np.exp(intercept) * x_fit**slope  # Convert back from log space
 
+# Generate best-fit line in log space
+x_fit_1 = np.logspace(np.log10(min(x_1)), np.log10(max(x_1)), 100)  # Log-spaced x values
+y_fit_1 = np.exp(intercept_1) * x_fit_1**slope_1  # Convert back from log space
+
 # Plot log-log graph
 plt.figure(figsize=(8, 6))
-plt.loglog(x, y, 'o', label="Val Loss")  # Plot original data
-plt.loglog(x_fit, y_fit, 'r--', label=f"Best Fit: y = {np.exp(intercept):.2f}x^{slope:.3f}")  # Best fit line
+plt.loglog(x, y, 'o', label="Val Loss SNPE")  # Plot original data
+plt.loglog(x_fit, y_fit, 'r--', label=f"Best Fit SNPE: y = {np.exp(intercept):.2f}x^{slope:.3f}")  # Best fit line
+plt.loglog(x_1, y_1, 'x', label="Test Loss TMNRE")  # Plot original data
+plt.loglog(x_fit_1, y_fit_1, 'g--', label=f"Best Fit TMNRE: y = {np.exp(intercept_1):.2f}x^{slope_1:.3f}")  # Best fit line
 
 # Labels and title
 plt.xlabel('Number of Training Simulations')
 plt.ylabel('Shifted Validation Loss (L - L_CR)')
-plt.title('How Validation Loss Changes with Number of Training Simulations')
+plt.title('How Validation Loss Changes with Number of Training Simulations for SNPE and TMNRE')
 plt.legend()
 
 # Show the plot
 plt.show()
 
 # Print the equation of the best fit line
-print(f"Best fit equation: y = {np.exp(intercept):.2f} * x^{slope:.2f}")
+print(f"SNPE Best fit equation: y = {np.exp(intercept):.2f} * x^{slope:.3f}")
+print(f"TMNRE Best fit equation: y = {np.exp(intercept_1):.2f} * x^{slope_1:.3f}")
