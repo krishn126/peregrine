@@ -3,11 +3,14 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
 # Sample data
-x = np.array([134272, 67072, 26752, 13312, 6656, 2560, 1280, 128])  # simulation number variables
-y = np.array([-4.79168, -3.5644, -2.19829, -0.26212, 0.91438, 5.24674, 6.31091, 8.74037])  # val loss variables
+x = np.array([134272, 67072, 26752, 13312, 6656, 2560, 1280])  # simulation number variables #128
+y = np.array([-4.79168, -3.5644, -2.19829, -0.26212, 0.91438, 5.24674, 6.31091])  # val loss variables #8.74037
 
-x_1 = np.array([134272, 67072, 26752, 13312, 6656, 2560, 1280, 128])  # simulation number variables
-y_1 = np.array([-5.79168, -4.5644, -3.19829, -1.26212, 1.91438, 6.24674, 7.31091, 9.74037])  # val loss variables
+# x = np.array([134272, 67072, 26752, 13312, 6656])  # simulation number variables
+# y = np.array([-4.79168, -3.5644, -2.19829, -0.26212, 0.91438])  # val loss variables
+
+x_1 = np.array([1792, 2688, 4480, 8960, 19968, 29952, 49920, 62976, 89984, 107904])  # simulation number variables
+y_1 = np.array([-2.5372467041015625, -2.1801271438598633, -3.156132936477661, -3.2031116485595703, -3.3537256717681885, -3.4139301776885986, -4.036552429199219, -4.062026500701904,  -4.175949573516846, -4.175949573516846])  # test loss variables
 
 approx_crb = 52.545037343796665
 y = y + approx_crb  # Shift the validation loss 
@@ -27,7 +30,7 @@ x_fit = np.logspace(np.log10(min(x)), np.log10(max(x)), 100)  # Log-spaced x val
 y_fit = np.exp(intercept) * x_fit**slope  # Convert back from log space
 
 # Generate best-fit line in log space
-x_fit_1 = np.logspace(np.log10(min(x_1)), np.log10(max(x_1)), 100)  # Log-spaced x values
+x_fit_1 = np.logspace(np.log10(min(x)), np.log10(max(x)), 100)  # Log-spaced x values
 y_fit_1 = np.exp(intercept_1) * x_fit_1**slope_1  # Convert back from log space
 
 # Plot log-log graph
