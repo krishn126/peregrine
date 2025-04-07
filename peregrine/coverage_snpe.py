@@ -32,6 +32,7 @@ import psutil
 import logging
 import pickle
 import torch.distributions as dist
+from sbi.analysis import plot_tarp
 
 ranges = [
         (0.125, 1.0),  # mass_ratio
@@ -404,3 +405,4 @@ if __name__ == "__main__":
  
     credibility_levels, empirical_coverages = compute_coverage_per_param(40, theta_train)
     plot_coverage(credibility_levels, empirical_coverages)
+
