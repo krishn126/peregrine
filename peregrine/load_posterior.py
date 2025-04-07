@@ -384,21 +384,21 @@ if __name__ == "__main__":
     # print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
 
     # # Plot SNPE vs TMNRE posterior
-    fig = plt.figure(figsize=(15, 8))
-    for idx in range(15):
-        ax = plt.subplot(5, 3, idx + 1)
-        ax.set_title(f"{order[idx]}")
-        logratios = lrs.logratios[:, idx]
-        params = lrs.params[:, idx, 0]
-        weights1 = np.ones_like(posterior_samples[:,0,idx])
-        weights2 = np.exp(logratios.numpy())
-        plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
-        plt.axvline(x=true_params[:,idx], linestyle='--')
-    fig.suptitle("NPE vs TMNRE", fontsize=20)
-    plt.tight_layout()
-    blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
-    orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
-    fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
+    # fig = plt.figure(figsize=(15, 8))
+    # for idx in range(15):
+    #     ax = plt.subplot(5, 3, idx + 1)
+    #     ax.set_title(f"{order[idx]}")
+    #     logratios = lrs.logratios[:, idx]
+    #     params = lrs.params[:, idx, 0]
+    #     weights1 = np.ones_like(posterior_samples[:,0,idx])
+    #     weights2 = np.exp(logratios.numpy())
+    #     plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
+    #     plt.axvline(x=true_params[:,idx], linestyle='--')
+    # fig.suptitle("NPE vs TMNRE", fontsize=20)
+    # plt.tight_layout()
+    # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
+    # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
     
     # #Corner Plot of SNPE vs Dynesty
     # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
@@ -409,29 +409,29 @@ if __name__ == "__main__":
     # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
     # #Save Plots
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
 
-    # #JS Divergence Calculations 
-    # js_div_dyn = 0.0
-    # js_div_per = 0.0
-    # js_div_dynper = 0.0
+    #JS Divergence Calculations 
+    js_div_dyn = 0.0
+    js_div_per = 0.0
+    js_div_dynper = 0.0
 
-    # for i in range(15):
-    #     samples_p = posterior_samples[:,0,i].numpy()
-    #     samples_q = dynesty_posterior[:,i]
-    #     samples_t = lrs.params[:,i,0].numpy()
-    #     logratios = lrs.logratios[:,i].numpy()
-    #     weights = np.exp(logratios)
-    #     js_div_dyn += js_divergence(samples_p, samples_q)
-    #     js_div_per += js_divergence_hist(samples_p, samples_t, weights)
-    #     js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
+    for i in range(15):
+        samples_p = posterior_samples[:,0,i].numpy()
+        samples_q = dynesty_posterior[:,i]
+        samples_t = lrs.params[:,i,0].numpy()
+        logratios = lrs.logratios[:,i].numpy()
+        weights = np.exp(logratios)
+        js_div_dyn += js_divergence(samples_p, samples_q)
+        js_div_per += js_divergence_hist(samples_p, samples_t, weights)
+        js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
     
 
-    # js_div_dyn = js_div_dyn / 15
-    # js_div_per = js_div_per / 15
-    # js_div_dynper = js_div_dynper / 15
+    js_div_dyn = js_div_dyn / 15
+    js_div_per = js_div_per / 15
+    js_div_dynper = js_div_dynper / 15
 
-    # print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
-    # print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
-    # print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
+    print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
+    print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
+    print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
