@@ -299,7 +299,7 @@ if __name__ == "__main__":
         def count_params(model):
             return sum(p.numel() for p in model.parameters() if p.requires_grad)
         
-        print(f"Number of trainable parameters in the NPE model: {count_params(density_estimator)} - {count_params(embedding_net)}")
+        print(f"Number of trainable parameters in the embedding net: {count_params(embedding_net)}")
         sys.exit()
         
         if (
