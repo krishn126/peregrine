@@ -355,6 +355,20 @@ if __name__ == "__main__":
             patience = 8 
 
             limit = int(0.1*num_train_batches)
+
+            obs = (
+            {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
+        )
+
+            obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
+            obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
+            obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
+            obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
+            obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
+            obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
+
+            obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+            obs = torch.cat(obs, dim=1)
             obs = obs.unsqueeze(0)
             repeat_obs = obs.repeat(128, 1, 1)
 
