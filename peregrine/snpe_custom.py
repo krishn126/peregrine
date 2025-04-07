@@ -290,6 +290,12 @@ if __name__ == "__main__":
         # Define the inference object
         density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
         density_estimator = density_estimator.to('cuda')
+
+        def count_params(model):
+            return sum(p.numel() for p in model.parameters() if p.requires_grad)
+            
+        print(f"Number of parameters in the model: {count_params(density_estimator)}")
+        sys.exit()
         
         if (
             not conf["snpe"]["infer_only"]
@@ -351,11 +357,6 @@ if __name__ == "__main__":
             limit = int(1.0*num_train_batches)
 
             # Train the density estimator
-            def count_params(model):
-                 return sum(p.numel() for p in model.parameters() if p.requires_grad)
-            
-            print(f"Number of parameters in the model: {count_params(density_estimator)}")
-            sys.exit()
             
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
