@@ -299,8 +299,7 @@ if __name__ == "__main__":
         def count_params(model):
             return sum(p.numel() for p in model.parameters() if p.requires_grad)
         
-        print(f"Number of trainable parameters in the embedding net: {count_params(embedding_net)}")
-        sys.exit()
+        print(f"Number of trainable parameters in the model: {count_params(density_estimator)-count_params(embedding_net)}")
         
         if (
             not conf["snpe"]["infer_only"]
@@ -346,7 +345,7 @@ if __name__ == "__main__":
                 d = torch.cat(d, dim=2)
 
                 return d
-
+            
             num_epochs = conf["hparams"]["max_epochs"]
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
@@ -361,22 +360,6 @@ if __name__ == "__main__":
             patience = 8 
 
             limit = int(0.1*num_train_batches)
-
-            obs = (
-            {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
-        )
-
-            obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
-            obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
-            obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
-            obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
-            obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
-            obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
-
-            obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
-            obs = torch.cat(obs, dim=1)
-            obs = obs.unsqueeze(0)
-            repeat_obs = obs.repeat(128, 1, 1)
 
             # Train the density estimator
             for epoch in range(num_epochs):
