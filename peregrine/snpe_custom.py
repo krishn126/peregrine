@@ -354,16 +354,16 @@ if __name__ == "__main__":
             no_improvement_count = 0
             patience = 8 
 
-            limit = int(1.0*num_train_batches)
+            limit = int(0.1*num_train_batches)
+            obs = obs.unsqueeze(0)
+            repeat_obs = obs.repeat(128, 1, 1)
 
             # Train the density estimator
-            
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
-                proposal = joint_prior
                 with tqdm.tqdm(
-                    total = int(1.0*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(0.1*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i, sample in enumerate(train_data):
@@ -371,7 +371,11 @@ if __name__ == "__main__":
                             break
                         theta_train = get_theta(sample).to('cuda')
                         x_train = get_data(sample).to('cuda') 
-                        loss = density_estimator._log_prob_proposal_posterior_mog(theta_train, x_train, proposal).mean() # compute loss on batch
+                        log_posterior_prev = posterior_prev_func(theta_train).to('cuda')
+                        weights = torch.exp(log_posterior_prev - torch.max(log_posterior_prev)).to('cuda')         
+                        weights = weights / weights.mean() #normalize weights
+                        log_prob = density_estimator.loss(theta_train, x_train).to('cuda')
+                        loss = (weights * log_prob).mean()
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
                         optimizer.step() # take a step given these gradients
@@ -393,7 +397,12 @@ if __name__ == "__main__":
                     for sample in val_data: 
                         theta_val = get_theta(sample).to('cuda')
                         x_val = get_data(sample).to('cuda')   # iterate through validation dataloader
-                        epoch_val_loss += density_estimator.loss(theta_val, x_val).mean().item() # compute overall loss on val dataset batch by batch
+                        val_log_prob = density_estimator.loss(theta_val, x_val).mean().item() # compute val loss
+                        log_posterior_prev = posterior_prev_func(theta_val).to('cuda')
+                        weights = torch.exp(log_posterior_prev - torch.max(log_posterior_prev)).to('cuda')         
+                        weights = weights / weights.mean() #normalize weights
+                        val_loss = (weights * val_log_prob).mean()
+                        epoch_val_loss += val_loss # compute overall loss on val dataset batch by batch
 
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
                 scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
@@ -414,6 +423,8 @@ if __name__ == "__main__":
                     if no_improvement_count >= patience:
                         print("Early stopping triggered.")
                         break  # Stop training if no improvement seen for 'patience' validations
+
+                posterior_prev_func = lambda theta: -density_estimator.loss(theta.to('cuda'), repeat_obs.to('cuda')).to('cuda')
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
