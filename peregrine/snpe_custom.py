@@ -351,6 +351,12 @@ if __name__ == "__main__":
             limit = int(1.0*num_train_batches)
 
             # Train the density estimator
+            def count_params(model):
+                 return sum(p.numel() for p in model.parameters() if p.requires_grad)
+            
+            print(f"Number of parameters in the model: {count_params(density_estimator)}")
+            sys.exit()
+            
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0

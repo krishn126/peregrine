@@ -32,7 +32,6 @@ import psutil
 import logging
 import pickle
 import torch.distributions as dist
-from sbi.analysis import plot_tarp
 
 ranges = [
         (0.125, 1.0),  # mass_ratio
