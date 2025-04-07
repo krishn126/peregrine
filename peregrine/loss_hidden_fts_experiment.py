@@ -5,6 +5,7 @@ from scipy.stats import linregress
 # Sample data
 x = np.array([100, 50, 20, 10, 5, 1])  # simulation number variables
 x_num = np.array([14933992, 14713292, 14628872, 14608732, 14600162, 14594026])  # simulation number variables
+x_num = x_num - 14590290
 y = np.array([-0.55154, -0.26212, -0.04276, 0.46136, 0.53392, 4.14938])  # val loss variables
 
 approx_crb = 52.545037343796665
@@ -39,7 +40,7 @@ plt.loglog(x_num, y, 'o', label="Val Loss")  # Plot original data
 plt.loglog(x_fit, y_fit, 'r--', label=f"Best Fit: y = {np.exp(intercept):.2f}x^{slope:.3f}")  # Best fit line
 
 # Labels and title
-plt.xlabel('Number of Trainable Parameters')
+plt.xlabel('Number of Trainable Parameters in the Model')
 plt.ylabel('Shifted Validation Loss (L - L_CR)')
 plt.title('How Validation Loss Changes with Number of Trainable Parameters')
 plt.legend()
