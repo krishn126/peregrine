@@ -309,7 +309,6 @@ if __name__ == "__main__":
                 f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training network for round {round_id}"
             )
             
-            
             def pad_to_width(t, target_width, i):
                 current_width = t.shape[i]
                 if current_width < target_width:
@@ -345,28 +344,26 @@ if __name__ == "__main__":
                 d = torch.cat(d, dim=2)
 
                 return d
-            
+                        
             num_epochs = conf["hparams"]["max_epochs"]
             optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
             scheduler = setup_scheduler(optimizer) # initialise scheduler
             step = 0
             epoch_val_loss = 0.0         
 
-            num_train_batches = sum(1 for _ in train_data)
-            num_val_batches = sum(1 for _ in val_data)
-
+            num_train_batches = 1401
+            num_val_batches = 153
             best_validation_loss = float("inf")
             no_improvement_count = 0
             patience = 8 
 
             limit = int(0.1*num_train_batches)
-
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    total = int(1.0*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(0.1*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i, sample in enumerate(train_data):
