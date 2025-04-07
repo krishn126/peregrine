@@ -378,10 +378,10 @@ if __name__ == "__main__":
         js_div = 0.5 * (kl_p_m + kl_q_m)
         return js_div
     
-    # #CRB Bound
-    # posterior_samples = posterior_samples.squeeze(1)
-    # CRB = crb_from_posterior_samples(posterior_samples)
-    # print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
+    #CRB Bound
+    posterior_samples = posterior_samples.squeeze(1)
+    CRB = crb_from_posterior_samples(posterior_samples)
+    print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
 
     # # Plot SNPE vs TMNRE posterior
     # fig = plt.figure(figsize=(15, 8))
@@ -412,26 +412,26 @@ if __name__ == "__main__":
     # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
-    js_div_dyn = 0.0
-    js_div_per = 0.0
-    js_div_dynper = 0.0
+    # js_div_dyn = 0.0
+    # js_div_per = 0.0
+    # js_div_dynper = 0.0
 
-    for i in range(15):
-        samples_p = posterior_samples[:,0,i].numpy()
-        samples_q = dynesty_posterior[:,i]
-        samples_t = lrs.params[:,i,0].numpy()
-        logratios = lrs.logratios[:,i].numpy()
-        weights = np.exp(logratios)
-        js_div_dyn += js_divergence(samples_p, samples_q)
-        js_div_per += js_divergence_hist(samples_p, samples_t, weights)
-        js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
+    # for i in range(15):
+    #     samples_p = posterior_samples[:,0,i].numpy()
+    #     samples_q = dynesty_posterior[:,i]
+    #     samples_t = lrs.params[:,i,0].numpy()
+    #     logratios = lrs.logratios[:,i].numpy()
+    #     weights = np.exp(logratios)
+    #     js_div_dyn += js_divergence(samples_p, samples_q)
+    #     js_div_per += js_divergence_hist(samples_p, samples_t, weights)
+    #     js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
     
 
-    js_div_dyn = js_div_dyn / 15
-    js_div_per = js_div_per / 15
-    js_div_dynper = js_div_dynper / 15
+    # js_div_dyn = js_div_dyn / 15
+    # js_div_per = js_div_per / 15
+    # js_div_dynper = js_div_dynper / 15
 
-    print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
-    print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
-    print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
+    # print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
+    # print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
+    # print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
