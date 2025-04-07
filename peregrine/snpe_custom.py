@@ -361,6 +361,7 @@ if __name__ == "__main__":
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
+                proposal = joint_prior
                 with tqdm.tqdm(
                     total = int(1.0*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
@@ -370,7 +371,7 @@ if __name__ == "__main__":
                             break
                         theta_train = get_theta(sample).to('cuda')
                         x_train = get_data(sample).to('cuda') 
-                        loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
+                        loss = density_estimator._log_prob_proposal_posterior_mog(theta_train, x_train, proposal).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
                         optimizer.step() # take a step given these gradients
