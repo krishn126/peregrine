@@ -310,6 +310,7 @@ if __name__ == "__main__":
                 f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training network for round {round_id}"
             )
             
+            
             def pad_to_width(t, target_width, i):
                 current_width = t.shape[i]
                 if current_width < target_width:
