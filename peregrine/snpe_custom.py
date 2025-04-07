@@ -292,6 +292,9 @@ if __name__ == "__main__":
         density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
         density_estimator = density_estimator.to('cuda')
         embedding_net = init_network(conf)
+        embedding_net = embedding_net.to('cuda')
+        with torch.no_grad():
+            _ = embedding_net(dummy_theta)
 
         def count_params(model):
             return sum(p.numel() for p in model.parameters() if p.requires_grad)
