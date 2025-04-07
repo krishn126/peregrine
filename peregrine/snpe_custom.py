@@ -385,9 +385,12 @@ if __name__ == "__main__":
                             break
                         theta_train = get_theta(sample).to('cuda')
                         x_train = get_data(sample).to('cuda') 
-                        log_posterior_prev = posterior_prev_func(theta_train).to('cuda')
-                        weights = torch.exp(log_posterior_prev - torch.max(log_posterior_prev)).to('cuda')         
-                        weights = weights / weights.mean() #normalize weights
+                        if epoch == 0:
+                            weights = torch.ones_like(log_prob)  # no prior yet, use uniform weights
+                        else:
+                            log_posterior_prev = posterior_prev_func(theta_train).to('cuda')
+                            weights = torch.exp(log_posterior_prev - torch.max(log_posterior_prev)).to('cuda')
+                            weights = weights / weights.mean()  # normalize weights
                         log_prob = density_estimator.loss(theta_train, x_train).to('cuda')
                         loss = (weights * log_prob).mean()
                         optimizer.zero_grad() # zero the optimiser
@@ -412,9 +415,12 @@ if __name__ == "__main__":
                         theta_val = get_theta(sample).to('cuda')
                         x_val = get_data(sample).to('cuda')   # iterate through validation dataloader
                         val_log_prob = density_estimator.loss(theta_val, x_val).mean().item() # compute val loss
-                        log_posterior_prev = posterior_prev_func(theta_val).to('cuda')
-                        weights = torch.exp(log_posterior_prev - torch.max(log_posterior_prev)).to('cuda')         
-                        weights = weights / weights.mean() #normalize weights
+                        if epoch == 0:
+                            weights = torch.ones_like(log_prob)  # no prior yet, use uniform weights
+                        else:
+                            log_posterior_prev = posterior_prev_func(theta_val).to('cuda')
+                            weights = torch.exp(log_posterior_prev - torch.max(log_posterior_prev)).to('cuda')
+                            weights = weights / weights.mean()  # normalize
                         val_loss = (weights * val_log_prob).mean()
                         epoch_val_loss += val_loss # compute overall loss on val dataset batch by batch
 
