@@ -21,6 +21,7 @@ from inference_utils_snpe_custom import (
     setup_density_estimator,
     load_bounds,
     setup_scheduler,
+    init_network,
 )
 import torch
 import torch.distributions as dist
@@ -290,11 +291,12 @@ if __name__ == "__main__":
         # Define the inference object
         density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
         density_estimator = density_estimator.to('cuda')
+        embedding_net = init_network(conf)
 
         def count_params(model):
             return sum(p.numel() for p in model.parameters() if p.requires_grad)
-            
-        print(f"Number of parameters in the model: {count_params(density_estimator)}")
+        
+        print(f"Number of trainable parameters in the NPE model: {count_params(density_estimator)} - {count_params(embedding_net)}")
         sys.exit()
         
         if (
