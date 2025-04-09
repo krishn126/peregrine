@@ -373,7 +373,7 @@ if __name__ == "__main__":
 
             print(obs.shape)
             theta_sim = []
-            sys.exit()
+            num_epochs = 1
 
             limit = int(0.1*num_train_batches)
             # Train the density estimator
