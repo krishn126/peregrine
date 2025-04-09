@@ -375,13 +375,13 @@ if __name__ == "__main__":
             theta_sim = []
             num_epochs = 1
 
-            limit = int(0.1*num_train_batches)
+            limit = int(0.01*num_train_batches)
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    total = int(0.1*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(0.01*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i, sample in enumerate(train_data):
@@ -435,6 +435,7 @@ if __name__ == "__main__":
                         break  # Stop training if no improvement seen for 'patience' validations
                 obs = obs.repeat(limit, 1, 1)
                 print(obs.shape)
+                print(len(theta_sim))
                 log_probs = density_estimator.log_prob(theta_sim, obs)
                 
 
