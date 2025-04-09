@@ -372,6 +372,7 @@ if __name__ == "__main__":
             obs = torch.cat(obs, dim=1)
 
             print(obs.shape)
+            theta_sim = []
             sys.exit()
 
             limit = int(0.1*num_train_batches)
@@ -388,6 +389,7 @@ if __name__ == "__main__":
                             break
                         theta_train = get_theta(sample).to('cuda')
                         x_train = get_data(sample).to('cuda') 
+                        theta_sim.append(theta_train)
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
@@ -431,7 +433,10 @@ if __name__ == "__main__":
                     if no_improvement_count >= patience:
                         print("Early stopping triggered.")
                         break  # Stop training if no improvement seen for 'patience' validations
-                log_probs = density_estimator.log_prob(obs).mean()
+                obs.repeat(limit, 1, 1)
+                print(obs.shape)
+                log_probs = density_estimator.log_prob(theta_sim, obs)
+                print(log_probs).shape
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
