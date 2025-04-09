@@ -433,10 +433,10 @@ if __name__ == "__main__":
                     if no_improvement_count >= patience:
                         print("Early stopping triggered.")
                         break  # Stop training if no improvement seen for 'patience' validations
-                obs.repeat(limit, 1, 1)
+                obs = obs.repeat(limit, 1, 1)
                 print(obs.shape)
                 log_probs = density_estimator.log_prob(theta_sim, obs)
-                print(log_probs).shape
+                
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
