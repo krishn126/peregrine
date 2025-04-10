@@ -27,6 +27,11 @@ import torch
 import torch.distributions as dist
 from sbi.inference.posteriors import DirectPosterior
 import torch.nn.functional as F
+from sbi.utils.user_input_checks import (
+    check_sbi_inputs,
+    process_prior,
+    process_simulator,
+)
 
 # For parallelisation
 import subprocess
@@ -358,6 +363,8 @@ if __name__ == "__main__":
             patience = 8 
 
             limit = int(0.1*num_train_batches)
+
+            prior, num_parameters, prior_returns_numpy = process_prior(joint_prior)
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
