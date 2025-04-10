@@ -51,7 +51,7 @@ class SineDistribution(dist.Distribution):
         Uses inverse CDF sampling: x = arccos(1 - U), where U ~ Uniform(0,1)
         """
         u = torch.rand(sample_shape)
-        return torch.acos(1 - u)  # Returns samples in [0, pi]
+        return torch.acos(1 -2*u)  # Returns samples in [0, pi]
 
     def log_prob(self, x):
         """
