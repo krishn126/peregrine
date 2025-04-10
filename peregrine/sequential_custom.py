@@ -371,15 +371,20 @@ if __name__ == "__main__":
             obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
             obs = torch.cat(obs, dim=1)
 
-            print(obs.shape)
-            theta_sim = []
-            num_epochs = 1
+            obs = obs.repeat(128, 1, 1)
+            obs = obs.to('cuda')
+
+            log_probs = []
 
             limit = int(0.01*num_train_batches)
-            # Train the density estimator
+
+            # Train the density estimator in 1st round
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
+                log_probs = []
+                all_theta = []
+                all_x = []
                 with tqdm.tqdm(
                     total = int(0.01*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
@@ -389,7 +394,8 @@ if __name__ == "__main__":
                             break
                         theta_train = get_theta(sample).to('cuda')
                         x_train = get_data(sample).to('cuda') 
-                        theta_sim.append(theta_train)
+                        all_theta.append(theta_train)
+                        all_x.append(x_train)
                         loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
                         optimizer.zero_grad() # zero the optimiser
                         loss.backward() # compute the gradients
@@ -403,8 +409,6 @@ if __name__ == "__main__":
                                 "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
                             }
                         ) # print to tqdm bar
-                avg_train_loss = train_loss_epoch / num_train_batches
-
                 density_estimator.eval() # put estimator into eval mode
 
                 epoch_val_loss = 0.0
@@ -433,11 +437,87 @@ if __name__ == "__main__":
                     if no_improvement_count >= patience:
                         print("Early stopping triggered.")
                         break  # Stop training if no improvement seen for 'patience' validations
-                obs = obs.repeat(limit, 1, 1)
-                print(obs.shape)
-                print(len(theta_sim))
-                log_probs = density_estimator.log_prob(theta_sim, obs)
                 
+            with torch.no_grad():
+                for i, sample in enumerate(train_data):
+                    if i > limit:
+                        break
+                    theta_batch = all_theta[i]
+                    theta_batch = theta_batch.unsqueeze(0)
+                    logp = density_estimator.log_prob(theta_batch, obs)  
+                    log_probs.append(logp)
+
+            log_probs_tensor = torch.cat([lp.squeeze(0) for lp in log_probs], dim=0)
+            theta_tensor = torch.cat(all_theta)
+            x_tensor = torch.cat(all_x)
+            topk = 1500
+            topk_indices = torch.topk(log_probs_tensor, k=topk).indices
+            theta_subset = theta_tensor[topk_indices]
+            x_subset = x_tensor[topk_indices]
+            
+            print(
+                f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training network for round 2"
+            )
+
+            # Train the density estimator in second round
+            for epoch in range(num_epochs):
+                density_estimator.train() # put estimator into train mode
+                train_loss_epoch = 0.0
+                log_probs = []
+                all_theta = []
+                all_x = []
+                with tqdm.tqdm(
+                    total = topk, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                ) as pbar: # Fancy tqdm loading bar for printing the training status
+                        #iterate through the training examples
+                    for i in range(topk):
+                        theta_train = theta_subset[i,:].to('cuda')
+                        x_train = x_subset[i,:,:].to('cuda') 
+                        all_theta.append(theta_train)
+                        all_x.append(x_train)
+                        theta_train = theta_train.unsqueeze(0)
+                        x_train = x_train.unsqueeze(0)
+                        loss = density_estimator.loss(theta_train, x_train).mean() # compute loss on batch
+                        optimizer.zero_grad() # zero the optimiser
+                        loss.backward() # compute the gradients
+                        optimizer.step() # take a step given these gradients
+                        train_loss_epoch += loss.item()
+                        wandb.log({"train_loss": loss.item()}) # log loss to wandb
+                        step += 1
+                        pbar.update(1)  #Update the progress bar
+                        pbar.set_postfix(
+                            {
+                                "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
+                            }
+                        ) # print to tqdm bar
+                density_estimator.eval() # put estimator into eval mode
+
+                epoch_val_loss = 0.0
+                with torch.no_grad(): # ensure no gradients computed in val mode
+                    for sample in val_data: 
+                        theta_val = get_theta(sample).to('cuda')
+                        x_val = get_data(sample).to('cuda')   # iterate through validation dataloader
+                        epoch_val_loss += density_estimator.loss(theta_val, x_val).mean().item() # compute overall loss on val dataset batch by batch
+
+                epoch_val_loss /= num_val_batches # average loss over val dataset        
+                scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
+                learning_rate = optimizer.param_groups[0]["lr"]
+                #get the integer value of the learning rate
+                wandb.log(
+                    {
+                        "val_loss": epoch_val_loss,
+                        "step": step,
+                        "learning_rate": learning_rate,
+                    }
+                ) # log results
+                if epoch_val_loss < best_validation_loss:
+                    best_validation_loss = epoch_val_loss
+                    no_improvement_count = 0  # Reset counter if improvement is seen
+                else:
+                    no_improvement_count += 1
+                    if no_improvement_count >= patience:
+                        print("Early stopping triggered.")
+                        break  # Stop training if no improvement seen for 'patience' validations
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
