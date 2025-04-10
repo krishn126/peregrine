@@ -379,12 +379,12 @@ if __name__ == "__main__":
         return js_div
     
     #CRB Bound
-    posterior_samples = posterior_samples.squeeze(1)
-    CRB = crb_from_posterior_samples(posterior_samples)
-    print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
+    # posterior_samples = posterior_samples.squeeze(1)
+    # CRB = crb_from_posterior_samples(posterior_samples)
+    # print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
 
-    # # Plot SNPE vs TMNRE posterior
-    # fig = plt.figure(figsize=(15, 8))
+    # Plot SNPE vs TMNRE posterior
+    fig = plt.figure(figsize=(15, 8))
     # for idx in range(15):
     #     ax = plt.subplot(5, 3, idx + 1)
     #     ax.set_title(f"{order[idx]}")
@@ -399,6 +399,23 @@ if __name__ == "__main__":
     # blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
     # orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
     # fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
+
+    joint_prior_sample = joint_prior.sample(torch.Size([100000]))
+
+    for idx in range(15):
+        ax = plt.subplot(5, 3, idx + 1)
+        ax.set_title(f"{order[idx]}")
+        logratios = lrs.logratios[:, idx]
+        params = lrs.params[:, idx, 0]
+        # weights1 = np.ones_like(posterior_samples[:,0,idx])
+        # weights2 = np.exp(logratios.numpy())
+        plt.hist([posterior_samples[:,0,idx].numpy(), joint_prior_sample[:,idx].numpy()], range=ranges[idx], bins=100, density=True, alpha=0.7)
+        plt.axvline(x=true_params[:,idx], linestyle='--')
+    fig.suptitle("NPE vs Priors", fontsize=20)
+    plt.tight_layout()
+    blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+    orange_line = mlines.Line2D([], [], color='orange', label='Priors')
+    fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
     
     # #Corner Plot of SNPE vs Dynesty
     # fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
@@ -409,7 +426,7 @@ if __name__ == "__main__":
     # fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
     # #Save Plots
-    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/posterior_vs_prior.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     # js_div_dyn = 0.0
