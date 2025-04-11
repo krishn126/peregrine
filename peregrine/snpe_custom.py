@@ -291,6 +291,10 @@ if __name__ == "__main__":
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
 
+        prior, num_parameters, prior_returns_numpy = process_prior(joint_prior)
+        simulator = process_simulator(simulator, prior, prior_returns_numpy)
+        sys.exit()
+
         dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
         dummy_x = torch.randn(64, 6, 49152).to('cuda')  # Sample 64 x's
         # Define the inference object
@@ -298,6 +302,7 @@ if __name__ == "__main__":
         density_estimator = density_estimator.to('cuda')
         embedding_net = init_network(conf)
         embedding_net = embedding_net.to('cuda')
+
         with torch.no_grad():
             _ = embedding_net(dummy_x)
 
@@ -364,7 +369,6 @@ if __name__ == "__main__":
 
             limit = int(0.1*num_train_batches)
 
-            prior, num_parameters, prior_returns_numpy = process_prior(joint_prior)
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
