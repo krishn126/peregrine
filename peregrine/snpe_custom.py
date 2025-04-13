@@ -291,10 +291,6 @@ if __name__ == "__main__":
         # Create a joint prior distribution
         joint_prior = JointPriorTensor(priors, keys_order=order)
 
-        prior, num_parameters, prior_returns_numpy = process_prior(joint_prior)
-        simulator = process_simulator(simulator, prior, prior_returns_numpy)
-        sys.exit()
-
         dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
         dummy_x = torch.randn(64, 6, 49152).to('cuda')  # Sample 64 x's
         # Define the inference object
@@ -367,14 +363,14 @@ if __name__ == "__main__":
             no_improvement_count = 0
             patience = 8 
 
-            limit = int(0.1*num_train_batches)
+            limit = int(0.01*num_train_batches)
 
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    total = int(0.1*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(0.01*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i, sample in enumerate(train_data):
