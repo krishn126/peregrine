@@ -276,10 +276,11 @@ def load_bounds(conf: dict, round_id: int):
     if round_id == 1:
         return None
     else:
-        bounds = np.loadtxt(
-            f"{conf['zarr_params']['store_path']}/bounds_{conf['zarr_params']['run_id']}_R{round_id - 1}.txt"
-        )
-        return bounds
+        # bounds = np.loadtxt(
+        #     f"{conf['zarr_params']['store_path']}/bounds_{conf['zarr_params']['run_id']}_R{round_id - 1}.txt"
+        # )
+        # return bounds
+        return None
 
 
 def save_coverage(coverage, conf: dict, round_id: int):
