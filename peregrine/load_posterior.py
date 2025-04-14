@@ -466,3 +466,5 @@ if __name__ == "__main__":
         print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
         print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
+    # js_div_calcs()
+    
