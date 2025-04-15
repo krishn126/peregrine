@@ -2,7 +2,7 @@ print(
     r"""
              /'{>           Initialising PEREGRINE
          ____) (____        ----------------------
-       //'--;   ;--'\\      Type: SNPE Inference
+       //'--;   ;--'\\      Type: Single Round NPE Inference 
       ///////\_/\\\\\\\     Authors: U.Bhardwaj, J.Alvey, K.Nanavati
              m m            Version: v0.0.1 | April 2023
 """
@@ -424,6 +424,6 @@ if __name__ == "__main__":
 
             density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
-            torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator.pt")
-            torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior.pt")
+            torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator_npe.pt")
+            torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_npe.pt")
              
