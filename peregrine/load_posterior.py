@@ -439,8 +439,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = corner_plot()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/posterior_vs_prior.png", dpi=300, bbox_inches='tight')
+    # fig = corner_plot()
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/posterior_vs_prior.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
@@ -466,5 +466,5 @@ if __name__ == "__main__":
         print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
         print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
     
-    # js_div_calcs()
+    js_div_calcs()
     
