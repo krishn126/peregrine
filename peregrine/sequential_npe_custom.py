@@ -199,6 +199,8 @@ if __name__ == "__main__":
     obs = sl.Sample(
         {key: obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
     )
+    posteriors = []
+    posterior_samples = []
     for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
         # Initialise the zarr store to save the simulations
         start_time = datetime.now()
@@ -364,6 +366,23 @@ if __name__ == "__main__":
             no_improvement_count = 0
             patience = 8 
 
+            obs = (
+            {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
+                )
+
+            obs["d_t"] = pad_to_length(obs["d_t"], 6, 0) 
+            obs["n_t"] = pad_to_length(obs["n_t"], 6, 0) 
+            obs["d_f"] = pad_to_width(obs["d_f"], 8192, 1) 
+            obs["d_f_w"] = pad_to_width(obs["d_f_w"], 8192, 1)
+            obs["n_f"] = pad_to_width(obs["n_f"], 8192, 1)
+            obs["n_f_w"] = pad_to_width(obs["n_f_w"], 8192, 1) 
+
+            obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
+            obs = torch.cat(obs, dim=1)
+
+            obs = obs.repeat(128, 1, 1)
+            obs = obs.to('cuda')
+
             limit = int(0.01*num_train_batches)
 
             # Train the density estimator
@@ -440,7 +459,17 @@ if __name__ == "__main__":
                         print("Early stopping triggered.")
                         break  # Stop training if no improvement seen for 'patience' validations
 
-            density_estimator=density_estimator.to('cpu')
-            posterior = DirectPosterior(density_estimator, joint_prior)
+                density_estimator=density_estimator.to('cpu')
+                posterior = DirectPosterior(density_estimator, joint_prior)
+                posteriors.append(posterior)
+                # Find the 2.5 - 97.5% HPD region of the prior
+                samples = posterior.sample((10000,), x=obs)
+                posterior_samples.append(samples)
+                # hpd_intervals = [compute_hpd_interval(samples[:, i], alpha=0.05) for i in range(samples.shape[1])]
+                # trunc_prior = TruncatedPrior(prior, hpd_intervals)
+                # trunc_prior, num_parameters, prior_returns_numpy = process_prior(trunc_prior)
+                # proposal = trunc_prior  
+                proposal = posterior.set_default_x(obs) #Setting proposal to trained density estimator
+
             torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator_snpe.pt")
             torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_snpe.pt")
