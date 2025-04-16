@@ -405,14 +405,14 @@ if __name__ == "__main__":
             no_improvement_count = 0
             patience = 8 
 
-            limit = int(0.01*num_train_batches)
+            limit = int(1*num_train_batches)
 
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    total = int(0.01*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(1*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i, sample in enumerate(train_data):
