@@ -366,9 +366,13 @@ if __name__ == "__main__":
             for p in processes:
                 p.wait()
         else:
-            bounds = load_bounds(conf, round_id)
-            simulator = init_simulator(conf, bounds)
-            simulate(simulator, store, conf)
+            if round_id == 1:
+                bounds = load_bounds(conf, round_id)
+                simulator = init_simulator(conf, bounds=bounds)
+                simulate(simulator, store, conf)
+            else:
+                simulator = init_simulator(conf, proposal_samples=proposal_samples) 
+                simulate(simulator, store, conf)
         logging.info(f"Simulations for round {round_id} completed")
         # Initialise data loader for training
         print(
