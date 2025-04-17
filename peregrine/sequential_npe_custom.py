@@ -443,10 +443,7 @@ if __name__ == "__main__":
                                 "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
                             }
                         ) # print to tqdm bar
-                avg_train_loss = train_loss_epoch / num_train_batches
-
                 density_estimator.eval() # put estimator into eval mode
-
                 epoch_val_loss = 0.0
                 with torch.no_grad(): # ensure no gradients computed in val mode
                     for sample in val_data: 
@@ -466,7 +463,7 @@ if __name__ == "__main__":
                 epoch_val_loss /= num_val_batches # average loss over val dataset        
                 scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
                 learning_rate = optimizer.param_groups[0]["lr"]
-                #get the integer value of the learning rate
+
                 wandb.log(
                     {
                         "val_loss": epoch_val_loss,
@@ -474,6 +471,7 @@ if __name__ == "__main__":
                         "learning_rate": learning_rate,
                     }
                 ) # log results
+                
                 if epoch_val_loss < best_validation_loss:
                     best_validation_loss = epoch_val_loss
                     no_improvement_count = 0  # Reset counter if improvement is seen
