@@ -202,7 +202,6 @@ if __name__ == "__main__":
         {key: obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
     )
     posteriors = []
-    posterior_samples = []
     # # Define priors 
     def move_priors_to_device(priors, device):
         new_priors = {}
