@@ -30,6 +30,8 @@ class Simulator(sl.Simulator):
         if proposal_samples is not None:
             self.proposal_samples = proposal_samples # NOTE: Make sure these are numpy arrays
             # NOTE: make sure this is [Nsamples, Nparams]
+        else:
+            self.proposal_samples = None
         waveform_generator = WaveformGenerator(
             duration=self.waveform_arguments["duration"],
             start_time=self.waveform_arguments["start"],
