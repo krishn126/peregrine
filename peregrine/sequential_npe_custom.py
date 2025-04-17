@@ -329,8 +329,6 @@ if __name__ == "__main__":
 
     obs = [obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]]
     obs = torch.cat(obs, dim=1)
-
-    # obs = obs.repeat(128, 1, 1)
     obs = obs.to('cuda')
 
     for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
@@ -405,14 +403,14 @@ if __name__ == "__main__":
             no_improvement_count = 0
             patience = 8 
 
-            limit = int(1*num_train_batches)
+            limit = int(0.01*num_train_batches)
 
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    total = int(1*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(0.01*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i, sample in enumerate(train_data):
@@ -492,6 +490,10 @@ if __name__ == "__main__":
             # trunc_prior, num_parameters, prior_returns_numpy = process_prior(trunc_prior)
             # proposal = trunc_prior  
             proposal = posterior.set_default_x(obs) #Setting proposal to trained density estimator
+            proposal_samples = posterior.sample_batched(
+                torch.Size([10000]), x=obs
+            )
+            
             
 
     torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator_snpe.pt")
