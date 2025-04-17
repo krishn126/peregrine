@@ -202,7 +202,7 @@ if __name__ == "__main__":
         {key: obs[key] for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
     )
     posteriors = []
-    # # Define priors 
+
     def move_priors_to_device(priors, device):
         new_priors = {}
         for key, p in priors.items():
@@ -238,7 +238,6 @@ if __name__ == "__main__":
         "geocent_time": dist.Uniform(torch.tensor([-3.634473541751503944e-03]), torch.tensor([2.502904739230871201e-03])),
     }
 
-    # Define a fixed ordering for the parameters.
     order = [
         "mass_ratio",
         "chirp_mass",
@@ -255,20 +254,22 @@ if __name__ == "__main__":
         "ra",
         "psi",
         "geocent_time",
-    ]
+    ] #same ordering as int / ext priors I believe - do check though
 
-    # Create a joint prior distribution
     device = 'cuda'
+
     priors_on_device = move_priors_to_device(priors, device)
     joint_prior = JointPriorTensor(priors_on_device, keys_order=list(priors.keys()), device="cuda")
 
-    dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  # Sample 64 thetas
-    dummy_x = torch.randn(64, 6, 49152).to('cuda')  # Sample 64 x's
-    # Define the inference object
+    dummy_theta = joint_prior.sample(torch.Size([64])).to('cuda')  
+    dummy_x = torch.randn(64, 6, 49152).to('cuda')  
+
     density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
     density_estimator = density_estimator.to('cuda')
+
     embedding_net = init_network(conf)
     embedding_net = embedding_net.to('cuda')
+
     proposal = joint_prior
 
     with torch.no_grad():
@@ -409,7 +410,6 @@ if __name__ == "__main__":
 
             limit = int(num_train_batches)
 
-            # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() 
                 train_loss_epoch = 0.0
@@ -442,8 +442,10 @@ if __name__ == "__main__":
                                 "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
                             }
                         ) 
+
                 density_estimator.eval() 
                 epoch_val_loss = 0.0
+
                 with torch.no_grad(): 
                     for sample in val_data: 
                         theta_val = get_theta(sample).to('cuda')
@@ -469,25 +471,28 @@ if __name__ == "__main__":
                         "step": step,
                         "learning_rate": learning_rate,
                     }
-                ) # log results
+                ) 
                 
                 if epoch_val_loss < best_validation_loss:
                     best_validation_loss = epoch_val_loss
-                    no_improvement_count = 0  # Reset counter if improvement is seen
+                    no_improvement_count = 0  
                 else:
                     no_improvement_count += 1
                     if no_improvement_count >= patience:
                         print("Early stopping triggered.")
-                        break  # Stop training if no improvement seen for 'patience' validations
+                        break  
 
             posterior = DirectPosterior(density_estimator, joint_prior)
             posteriors.append(posterior)
-            proposal = posterior.set_default_x(obs) #Setting proposal to trained density estimator
+
+            proposal = posterior.set_default_x(obs) 
             proposal_samples = posterior.sample_batched(
                 torch.Size([10000]), x=obs
             )
+
             proposal_samples = proposal_samples.squeeze(1)
             proposal_samples = proposal_samples.cpu().numpy()
+
             torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt")
             torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt")
             
