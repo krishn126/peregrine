@@ -486,7 +486,6 @@ if __name__ == "__main__":
                 torch.Size([10000]), x=obs
             )
             proposal_samples = proposal_samples.cpu().numpy()
-            proposal_samples = proposal_samples.to('cuda')
             torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/{round_id}_density_estimator_snpe.pt")
             torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/{round_id}_posterior_snpe.pt")
             
