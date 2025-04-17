@@ -19,7 +19,6 @@ from inference_utils_snpe_custom import (
     setup_zarr_store,
     setup_dataloader,
     setup_density_estimator,
-    load_bounds,
     setup_scheduler,
     init_network,
 )
@@ -27,18 +26,12 @@ import torch
 import torch.distributions as dist
 from sbi.inference.posteriors import DirectPosterior
 import torch.nn.functional as F
-from sbi.utils.user_input_checks import (
-    check_sbi_inputs,
-    process_prior,
-    process_simulator,
-)
 
 # For parallelisation
 import subprocess
 import psutil
 import logging
 
-import matplotlib.pyplot as plt
 import tqdm
 import wandb
 from torch.optim import AdamW
@@ -176,7 +169,6 @@ if __name__ == "__main__":
         level=logging.INFO,
     )
     simulator = init_simulator(conf)
-    bounds = None
     if conf["snpe"]["generate_obs"]:
         obs = simulator.generate_observation()
         logging.warning(
@@ -367,8 +359,8 @@ if __name__ == "__main__":
                 p.wait()
         else:
             if round_id == 1:
-                bounds = load_bounds(conf, round_id)
-                simulator = init_simulator(conf, bounds=bounds)
+                print("Using Prior Samples for Simulations")
+                simulator = init_simulator(conf)
                 simulate(simulator, store, conf)
             else:
                 print("Using Proposal Samples for Simulations")
