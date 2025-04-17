@@ -191,7 +191,7 @@ class Simulator(sl.Simulator):
         n_f_w = graph.node("n_f_w", self.generate_n_f_w, noise)
 
 
-def init_simulator(conf: dict, bounds=None):
+def init_simulator(conf: dict, bounds=None, proposal_samples=None):
     """
     Initialise the swyft simulator
     Args:
@@ -206,7 +206,7 @@ def init_simulator(conf: dict, bounds=None):
     >>> conf = init_config(snpe_parser, sysargs, sim=True)
     >>> simulator = init_simulator(conf)
     """
-    simulator = Simulator(conf, bounds)
+    simulator = Simulator(conf, bounds, proposal_samples)
     return simulator
 
 
