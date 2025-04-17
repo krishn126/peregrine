@@ -9,7 +9,7 @@ bilby.core.utils.logger.setLevel("WARNING")
 
 
 class Simulator(sl.Simulator):
-    def __init__(self, conf, bounds=None):
+    def __init__(self, conf, bounds=None, proposal_samples=None):
         super().__init__()
         self.injection_parameters = conf["injection"].copy()
         self.waveform_arguments = conf["waveform_params"].copy()
@@ -27,6 +27,9 @@ class Simulator(sl.Simulator):
             for key in self.ext_priors.keys():
                 self.ext_priors[key].minimum = self.bounds[conf["param_idxs"][key]][0]
                 self.ext_priors[key].maximum = self.bounds[conf["param_idxs"][key]][1]
+        if proposal_samples is not None:
+            self.proposal_samples = proposal_samples # NOTE: Make sure these are numpy arrays
+            # NOTE: make sure this is [Nsamples, Nparams]
         waveform_generator = WaveformGenerator(
             duration=self.waveform_arguments["duration"],
             start_time=self.waveform_arguments["start"],
@@ -48,15 +51,25 @@ class Simulator(sl.Simulator):
         )
 
     def sample_int_prior(self):
-        z_int = np.array(
-            [self.int_priors[key].sample() for key in self.int_priors.keys()]
-        )
+        if self.proposal_samples is None:
+            z_int = np.array(
+                [self.int_priors[key].sample() for key in self.int_priors.keys()]
+            )
+        else:
+            sample_id = np.random.choice(self.proposal_samples.shape[0])
+            z_int = self.proposal_samples[sample_id, : len(self.int_priors)] # NOTE: CHECK THE INDEXES!!!!!!!!
+            # OR something like z_int = self.proposal_samples[sample_id, self.int_idxs] # NOTE: CHECK THE INDEXES!!!!!!!!
         return z_int
 
     def sample_ext_prior(self):
-        z_ext = np.array(
-            [self.ext_priors[key].sample() for key in self.ext_priors.keys()]
-        )
+        if self.proposal_samples is None:
+            z_ext = np.array(
+                [self.ext_priors[key].sample() for key in self.ext_priors.keys()]
+            )
+        else:
+            sample_id = np.random.choice(self.proposal_samples.shape[0])
+            z_ext = self.proposal_samples[sample_id, len(self.int_priors) :] # NOTE: CHECK THE INDEXES!!!!!!!!
+            # OR something like z_int = self.proposal_samples[sample_id, self.ext_idxs] # NOTE: CHECK THE INDEXES!!!!!!!!
         return z_ext
 
     def generate_z_total(self, z_int, z_ext):

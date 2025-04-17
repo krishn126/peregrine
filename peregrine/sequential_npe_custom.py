@@ -479,22 +479,16 @@ if __name__ == "__main__":
                         print("Early stopping triggered.")
                         break  # Stop training if no improvement seen for 'patience' validations
 
-            # density_estimator=density_estimator.to('cpu')
             posterior = DirectPosterior(density_estimator, joint_prior)
             posteriors.append(posterior)
-            # Find the 2.5 - 97.5% HPD region of the prior
-            # samples = posterior.sample_batched(torch.Size([10000]), x=obs)
-            # posterior_samples.append(samples)
-            # hpd_intervals = [compute_hpd_interval(samples[:, i], alpha=0.05) for i in range(samples.shape[1])]
-            # trunc_prior = TruncatedPrior(prior, hpd_intervals)
-            # trunc_prior, num_parameters, prior_returns_numpy = process_prior(trunc_prior)
-            # proposal = trunc_prior  
             proposal = posterior.set_default_x(obs) #Setting proposal to trained density estimator
             proposal_samples = posterior.sample_batched(
                 torch.Size([10000]), x=obs
             )
+            proposal_samples = proposal_samples.numpy()
+            torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/{round_id}_density_estimator_snpe.pt")
+            torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/{round_id}_posterior_snpe.pt")
             
             
 
-    torch.save(density_estimator, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/density_estimator_snpe.pt")
-    torch.save(posterior, "/data/kn405/Code/peregrine_snpe/peregrine/peregrine/posterior_snpe.pt")
+    
