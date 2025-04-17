@@ -370,6 +370,7 @@ if __name__ == "__main__":
                 simulator = init_simulator(conf, bounds=bounds)
                 simulate(simulator, store, conf)
             else:
+                print("Using Proposal Samples for Simulations")
                 simulator = init_simulator(conf, proposal_samples=proposal_samples) 
                 simulate(simulator, store, conf)
         logging.info(f"Simulations for round {round_id} completed")
