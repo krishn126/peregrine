@@ -15,7 +15,7 @@ if __name__ == "__main__":
     if coverage:
         conf["zarr_params"]["chunk_size"] = 50
     bounds = load_bounds(conf, round_id)
-    simulator = init_simulator(conf, bounds)
+    simulator = init_simulator(conf, bounds=bounds, proposal_samples=None)
     store = setup_zarr_store(conf, simulator, round_id=round_id, coverage=coverage)
     while store.sims_required > 0:
         simulate(
