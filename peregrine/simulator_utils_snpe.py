@@ -59,8 +59,7 @@ class Simulator(sl.Simulator):
             )
         else:
             sample_id = np.random.choice(self.proposal_samples.shape[0])
-            z_int = self.proposal_samples[sample_id, : len(self.int_priors)] # NOTE: CHECK THE INDEXES!!!!!!!!
-            # OR something like z_int = self.proposal_samples[sample_id, self.int_idxs] # NOTE: CHECK THE INDEXES!!!!!!!!
+            z_int = self.proposal_samples[sample_id, :len(self.int_priors)] # NOTE: CHECK THE INDEXES!!!!!!!!
         return z_int
 
     def sample_ext_prior(self):
@@ -70,8 +69,7 @@ class Simulator(sl.Simulator):
             )
         else:
             sample_id = np.random.choice(self.proposal_samples.shape[0])
-            z_ext = self.proposal_samples[sample_id, len(self.int_priors) :] # NOTE: CHECK THE INDEXES!!!!!!!!
-            # OR something like z_int = self.proposal_samples[sample_id, self.ext_idxs] # NOTE: CHECK THE INDEXES!!!!!!!!
+            z_ext = self.proposal_samples[sample_id, len(self.int_priors):] # NOTE: CHECK THE INDEXES!!!!!!!!
         return z_ext
 
     def generate_z_total(self, z_int, z_ext):
