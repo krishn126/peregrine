@@ -401,20 +401,20 @@ if __name__ == "__main__":
             step = 0
             epoch_val_loss = 0.0         
 
-            num_train_batches = 1401
-            num_val_batches = 153
+            num_train_batches = sum(1 for _ in train_data)
+            num_val_batches = sum(1 for _ in val_data)
             best_validation_loss = float("inf")
             no_improvement_count = 0
             patience = 8 
 
-            limit = int(0.01*num_train_batches)
+            limit = int(num_train_batches)
 
             # Train the density estimator
             for epoch in range(num_epochs):
                 density_estimator.train() # put estimator into train mode
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
-                    total = int(0.01*num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
+                    total = int(num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: # Fancy tqdm loading bar for printing the training status
                         #iterate through the training examples
                     for i, sample in enumerate(train_data):
@@ -487,7 +487,9 @@ if __name__ == "__main__":
             proposal_samples = posterior.sample_batched(
                 torch.Size([10000]), x=obs
             )
+            proposal_samples = proposal_samples.squeeze(1)
             proposal_samples = proposal_samples.cpu().numpy()
+            print(proposal_samples.shape)
             torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt")
             torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt")
             
