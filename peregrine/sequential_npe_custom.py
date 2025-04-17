@@ -395,8 +395,8 @@ if __name__ == "__main__":
             )
              
             num_epochs = conf["hparams"]["max_epochs"]
-            optimizer = AdamW(density_estimator.parameters(), lr=1e-3) # initialise pytorch optimiser
-            scheduler = setup_scheduler(optimizer) # initialise scheduler
+            optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
+            scheduler = setup_scheduler(optimizer) 
             density_estimator = density_estimator.to('cuda')
             step = 0
             epoch_val_loss = 0.0         
@@ -411,18 +411,17 @@ if __name__ == "__main__":
 
             # Train the density estimator
             for epoch in range(num_epochs):
-                density_estimator.train() # put estimator into train mode
+                density_estimator.train() 
                 train_loss_epoch = 0.0
                 with tqdm.tqdm(
                     total = int(num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
-                ) as pbar: # Fancy tqdm loading bar for printing the training status
-                        #iterate through the training examples
+                ) as pbar: 
                     for i, sample in enumerate(train_data):
                         if i > limit:
                             break
                         theta_train = get_theta(sample).to('cuda')
                         x_train = get_data(sample).to('cuda') 
-                        losses = density_estimator.loss(theta_train, x_train) # compute loss on batch
+                        losses = density_estimator.loss(theta_train, x_train) 
                         if round_id == 1:
                             log_weights = torch.zeros_like(losses)
                         else: 
@@ -431,24 +430,24 @@ if __name__ == "__main__":
                                 log_q_theta = proposal.log_prob(theta_train)
                                 log_weights = log_p_theta - log_q_theta
                         loss = (torch.exp(log_weights) * losses).mean()
-                        optimizer.zero_grad() # zero the optimiser
-                        loss.backward() # compute the gradients
-                        optimizer.step() # take a step given these gradients
+                        optimizer.zero_grad() 
+                        loss.backward() 
+                        optimizer.step() 
                         train_loss_epoch += loss.item()
-                        wandb.log({"train_loss": loss.item()}) # log loss to wandb
+                        wandb.log({"train_loss": loss.item()}) 
                         step += 1
-                        pbar.update(1)  #Update the progress bar
+                        pbar.update(1) 
                         pbar.set_postfix(
                             {
                                 "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
                             }
-                        ) # print to tqdm bar
-                density_estimator.eval() # put estimator into eval mode
+                        ) 
+                density_estimator.eval() 
                 epoch_val_loss = 0.0
-                with torch.no_grad(): # ensure no gradients computed in val mode
+                with torch.no_grad(): 
                     for sample in val_data: 
                         theta_val = get_theta(sample).to('cuda')
-                        x_val = get_data(sample).to('cuda')   # iterate through validation dataloader
+                        x_val = get_data(sample).to('cuda')  
                         losses = density_estimator.loss(theta_val, x_val)
                         if round_id == 1:
                             log_weights = torch.zeros_like(losses)
@@ -457,11 +456,11 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_val)
                                 log_q_theta = proposal.log_prob(theta_val)
                                 log_weights = log_p_theta - log_q_theta
-                        val_loss = (torch.exp(log_weights) * losses).mean() #This is for multiplying weights
+                        val_loss = (torch.exp(log_weights) * losses).mean() 
                         epoch_val_loss += val_loss 
 
-                epoch_val_loss /= num_val_batches # average loss over val dataset        
-                scheduler.step(epoch_val_loss) # Step the learning rate scheduler based on validation loss
+                epoch_val_loss /= num_val_batches       
+                scheduler.step(epoch_val_loss) 
                 learning_rate = optimizer.param_groups[0]["lr"]
 
                 wandb.log(
@@ -489,7 +488,6 @@ if __name__ == "__main__":
             )
             proposal_samples = proposal_samples.squeeze(1)
             proposal_samples = proposal_samples.cpu().numpy()
-            print(proposal_samples.shape)
             torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt")
             torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt")
             
