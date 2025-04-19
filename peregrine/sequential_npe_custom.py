@@ -214,21 +214,21 @@ if __name__ == "__main__":
         return new_priors
     
     priors = {
-        "mass_ratio": dist.Uniform(torch.tensor([3.576977252960205078e-01]), torch.tensor([9.999501705169677734e-01])),
-        "chirp_mass": dist.Uniform(torch.tensor([2.849053955078125000e+01]), torch.tensor([3.366965866088867188e+01])),
+        "mass_ratio": dist.Uniform(torch.tensor([0.125]), torch.tensor([1.0])),
+        "chirp_mass": dist.Uniform(torch.tensor([25.0]), torch.tensor([100.0])),
         "theta_jn": SineDistribution(), 
-        "phase": dist.Uniform(torch.tensor([5.015052738599479198e-04]), torch.tensor([6.282635688781738281e+00])),
+        "phase": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
         "tilt_1": SineDistribution(),
         "tilt_2": SineDistribution(),
-        "a_1": dist.Uniform(torch.tensor([5.006928741931915283e-02]), torch.tensor([9.999464750289916992e-01])),
-        "a_2": dist.Uniform(torch.tensor([5.009920150041580200e-02]), torch.tensor([9.999063014984130859e-01])),
-        "phi_12": dist.Uniform(torch.tensor([7.937396294437348843e-04]), torch.tensor([6.282266139984130859e+00])),
-        "phi_jl": dist.Uniform(torch.tensor([7.755699157714843750e-01]), torch.tensor([4.403653621673583984e+00])),
-        "luminosity_distance": dist.Uniform(torch.tensor([3.640895080566406250e+02]), torch.tensor([1.145086425781250000e+03])),
-        "dec": CosineDistribution(),  # Assuming it already has event_shape=(1,)
-        "ra": dist.Uniform(torch.tensor([5.483808994293212891e+00]), torch.tensor([5.640668869018554688e+00])),
-        "psi": dist.Uniform(torch.tensor([2.063730207737535238e-04]), torch.tensor([3.141472339630126953e+00])),
-        "geocent_time": dist.Uniform(torch.tensor([-3.634473541751503944e-03]), torch.tensor([2.502904739230871201e-03])),
+        "a_1": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+        "a_2": dist.Uniform(torch.tensor([0.05]), torch.tensor([1.0])),
+        "phi_12": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+        "phi_jl": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+        "luminosity_distance": dist.Uniform(torch.tensor([100.0]), torch.tensor([1500.0])),
+        "dec": CosineDistribution(),  
+        "ra": dist.Uniform(torch.tensor([0.0]), torch.tensor([6.28318])),
+        "psi": dist.Uniform(torch.tensor([0.0]), torch.tensor([3.14159])),
+        "geocent_time": dist.Uniform(torch.tensor([-0.1]), torch.tensor([0.1])),
     }
 
     order = [
