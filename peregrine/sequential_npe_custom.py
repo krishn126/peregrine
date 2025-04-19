@@ -387,6 +387,21 @@ if __name__ == "__main__":
         print(
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Setting up trainer and network for round {round_id}"
         )
+
+        num_epochs = conf["hparams"]["max_epochs"]
+        optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
+        scheduler = setup_scheduler(optimizer) 
+        density_estimator = density_estimator.to('cuda')
+        step = 0
+        epoch_val_loss = 0.0         
+
+        num_train_batches = sum(1 for _ in train_data)
+        num_val_batches = sum(1 for _ in val_data)
+        best_validation_loss = float("inf")
+        no_improvement_count = 0
+        patience = 8 
+
+        limit = int(num_train_batches)
         
         if (
             not conf["snpe"]["infer_only"]
@@ -395,21 +410,6 @@ if __name__ == "__main__":
             print(
                 f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training network for round {round_id}"
             )
-             
-            num_epochs = conf["hparams"]["max_epochs"]
-            optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
-            scheduler = setup_scheduler(optimizer) 
-            density_estimator = density_estimator.to('cuda')
-            step = 0
-            epoch_val_loss = 0.0         
-
-            num_train_batches = sum(1 for _ in train_data)
-            num_val_batches = sum(1 for _ in val_data)
-            best_validation_loss = float("inf")
-            no_improvement_count = 0
-            patience = 8 
-
-            limit = int(num_train_batches)
 
             for epoch in range(num_epochs):
                 density_estimator.train() 
