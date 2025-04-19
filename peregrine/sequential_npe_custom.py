@@ -435,12 +435,12 @@ if __name__ == "__main__":
                         loss.backward() 
                         optimizer.step() 
                         train_loss_epoch += loss.item()
-                        wandb.log({"train_loss": loss.item()}) 
+                        wandb.log({f"train_loss_round_{round_id}": loss.item()}) 
                         step += 1
                         pbar.update(1) 
                         pbar.set_postfix(
                             {
-                                "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}"
+                                "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}| Round: {round_id}"
                             }
                         ) 
 
@@ -468,9 +468,10 @@ if __name__ == "__main__":
 
                 wandb.log(
                     {
-                        "val_loss": epoch_val_loss,
-                        "step": step,
-                        "learning_rate": learning_rate,
+                        f"val_loss_round_{round_id}": epoch_val_loss,
+                        f"step_round_{round_id}": step,
+                        f"learning_rate_round_{round_id}": learning_rate,
+                        f"epoch_round_{round_id}": epoch,
                     }
                 ) 
                 
