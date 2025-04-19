@@ -19,7 +19,7 @@ if __name__ == "__main__":
         bounds = load_bounds(conf, round_id)
         simulator = init_simulator(conf, bounds=bounds, proposal_samples=None)
     else:
-        proposal_samples_path = sys.argv[2]
+        proposal_samples_path = args[2]
         proposal_samples = np.load(proposal_samples_path)
         simulator = init_simulator(conf, bounds=None, proposal_samples=proposal_samples)
     store = setup_zarr_store(conf, simulator, round_id=round_id, coverage=coverage)
