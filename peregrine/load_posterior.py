@@ -423,9 +423,9 @@ if __name__ == "__main__":
             plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
             plt.axvline(x=true_params[:,idx], linestyle='--')
 
-        fig.suptitle("NPE vs TMNRE", fontsize=20)
+        fig.suptitle(f"SNPE Round {round_id} vs TMNRE", fontsize=20)
         plt.tight_layout()
-        blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+        blue_line = mlines.Line2D([], [], color='blue', label=f'SNPE Round {round_id}')
         orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
         fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
 
@@ -464,8 +464,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = corner_plot()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_corner_plot.png", dpi=300, bbox_inches='tight')
+    fig = plot_posterior_npe_tmnre()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_tmnre.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
