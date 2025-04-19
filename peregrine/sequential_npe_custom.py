@@ -493,7 +493,7 @@ if __name__ == "__main__":
 
             proposal_samples = proposal_samples.squeeze(1)
             proposal_samples = proposal_samples.cpu().numpy()
-            np.save(f"proposal_samples_round_{round_id}.npy", proposal_samples)
+            np.save(f"proposal_samples_round_{round_id+1}.npy", proposal_samples)
 
             torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt")
             torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt")
