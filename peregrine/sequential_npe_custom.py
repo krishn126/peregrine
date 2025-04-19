@@ -402,7 +402,7 @@ if __name__ == "__main__":
         patience = 8 
 
         limit = int(num_train_batches)
-        
+
         if (
             not conf["snpe"]["infer_only"]
             or len(glob.glob(f"{trainer_dir}/epoch*_R{round_id}.ckpt")) == 0
@@ -495,6 +495,10 @@ if __name__ == "__main__":
             proposal_samples = proposal_samples.squeeze(1)
             proposal_samples = proposal_samples.cpu().numpy()
             np.save(f"proposal_samples_round_{round_id+1}.npy", proposal_samples)
+
+            print(
+                f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training for round {round_id} completed. Saving Density Estimator and Posterior"
+            )
 
             torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt")
             torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt")
