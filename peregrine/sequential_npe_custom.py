@@ -35,6 +35,7 @@ import logging
 import tqdm
 import wandb
 from torch.optim import AdamW
+import numpy as np
     
 class SineDistribution(dist.Distribution):
     arg_constraints = {}
@@ -323,6 +324,13 @@ if __name__ == "__main__":
     obs = torch.cat(obs, dim=1)
     obs = obs.to('cuda')
 
+    prior_samples = joint_prior.sample_batched(
+        torch.Size([10000]), x=obs
+    )
+    prior_samples = prior_samples.squeeze(1)
+    prior_samples = prior_samples.cpu().numpy()
+    np.save(f"proposal_samples_round_1.npy", prior_samples)
+
     for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
         # Initialise the zarr store to save the simulations
         start_time = datetime.now()
@@ -352,6 +360,7 @@ if __name__ == "__main__":
                         "run_parallel_snpe.py",
                         f"{conf['zarr_params']['store_path']}/config_{conf['zarr_params']['run_id']}.txt",
                         str(round_id),
+                        f"proposal_samples_round_{round_id}.npy"
                     ]
                 )
                 processes.append(p)
@@ -484,6 +493,7 @@ if __name__ == "__main__":
 
             proposal_samples = proposal_samples.squeeze(1)
             proposal_samples = proposal_samples.cpu().numpy()
+            np.save(f"proposal_samples_round_{round_id}.npy", proposal_samples)
 
             torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt")
             torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt")
