@@ -324,9 +324,9 @@ if __name__ == "__main__":
     obs = torch.cat(obs, dim=1)
     obs = obs.to('cuda')
 
-    prior_samples = joint_prior.sample_batched(
-        torch.Size([10000]), x=obs
-    )
+    prior_samples = joint_prior.sample(
+        torch.Size([10000])
+    )    
     prior_samples = prior_samples.squeeze(1)
     prior_samples = prior_samples.cpu().numpy()
     np.save(f"proposal_samples_round_1.npy", prior_samples)
