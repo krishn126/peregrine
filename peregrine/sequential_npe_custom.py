@@ -399,7 +399,7 @@ if __name__ == "__main__":
         num_val_batches = sum(1 for _ in val_data)
         best_validation_loss = float("inf")
         no_improvement_count = 0
-        patience = 8 
+        patience = 15 
 
         limit = int(num_train_batches)
 
@@ -420,7 +420,7 @@ if __name__ == "__main__":
                     for i, sample in enumerate(train_data):
                         if i > limit:
                             break
-                        theta_train = get_theta(sample).to('cuda')
+                        theta_train = get_theta(sample).to('cuda')                        
                         x_train = get_data(sample).to('cuda') 
                         losses = density_estimator.loss(theta_train, x_train) 
                         if round_id == 1:
