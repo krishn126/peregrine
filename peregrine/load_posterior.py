@@ -442,7 +442,7 @@ if __name__ == "__main__":
             plt.hist([posterior_samples[:,0,idx].numpy(), joint_prior_sample[:,idx].numpy()], range=ranges[idx], bins=100, density=True, alpha=0.7)
             plt.axvline(x=true_params[:,idx], linestyle='--')
 
-        fig.suptitle("NPE vs Priors", fontsize=20)
+        fig.suptitle(f"SNPE Round {round_id} vs Priors", fontsize=20)
         plt.tight_layout()
         blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
         orange_line = mlines.Line2D([], [], color='orange', label='Priors')
