@@ -490,7 +490,7 @@ if __name__ == "__main__":
             proposal = posterior.set_default_x(obs) 
             num_sims = conf["zarr_params"]["sim_schedule"][round_id]
             proposal_samples = posterior.sample_batched(
-                torch.Size(num_sims), x=obs
+                torch.Size([num_sims]), x=obs
             )
 
             proposal_samples = proposal_samples.squeeze(1)
