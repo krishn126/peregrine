@@ -21,6 +21,7 @@ if __name__ == "__main__":
     else:
         proposal_samples_path = args[2]
         proposal_samples = np.load(proposal_samples_path)
+        print(f"Using proposal samples from {proposal_samples_path}")
         simulator = init_simulator(conf, bounds=None, proposal_samples=proposal_samples)
     store = setup_zarr_store(conf, simulator, round_id=round_id, coverage=coverage)
     while store.sims_required > 0:
