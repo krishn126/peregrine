@@ -309,6 +309,17 @@ if __name__ == "__main__":
 
         return d
     
+    def gaussian_kernel(x, x_o, tau):
+        """
+        x: Tensor of shape [batch_size, dim]
+        x_o: Tensor of shape [dim]
+        tau: float
+        Returns: Tensor of shape [batch_size]
+        """
+        diff = x - x_o  # [batch_size, dim]
+        dist_sq = torch.sum(diff ** 2, dim=1)  # [batch_size]
+        return ((2*torch.pi) ** (-3/2)) * (tau ** -3) * torch.exp(-dist_sq / (2 * tau ** 2))  # [batch_size]
+    
     obs = (
     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
         )
@@ -422,15 +433,21 @@ if __name__ == "__main__":
                             break
                         theta_train = get_theta(sample).to('cuda')                        
                         x_train = get_data(sample).to('cuda') 
+                        print(f"Shape of x_train: {x_train.shape}")
+                        sys.exit()
                         losses = density_estimator.loss(theta_train, x_train) 
                         if round_id == 1:
                             log_weights = torch.zeros_like(losses)
+                            weights = torch.exp(log_weights)
                         else: 
                             with torch.no_grad():
                                 log_p_theta = joint_prior.log_prob(theta_train)
                                 log_q_theta = proposal.log_prob(theta_train)
                                 log_weights = log_p_theta - log_q_theta
-                        loss = (torch.exp(log_weights) * losses).mean()
+                                # kernel_value = gaussian_kernel(x_train, obs, tau)
+                                kernel_value = torch.ones_like(losses)
+                                weights = kernel_value * torch.exp(log_weights)
+                        loss = (weights * losses).mean()
                         optimizer.zero_grad() 
                         loss.backward() 
                         optimizer.step() 
@@ -454,12 +471,16 @@ if __name__ == "__main__":
                         losses = density_estimator.loss(theta_val, x_val)
                         if round_id == 1:
                             log_weights = torch.zeros_like(losses)
+                            weights = torch.exp(log_weights)
                         else:
                             with torch.no_grad():
                                 log_p_theta = joint_prior.log_prob(theta_val)
                                 log_q_theta = proposal.log_prob(theta_val)
                                 log_weights = log_p_theta - log_q_theta
-                        val_loss = (torch.exp(log_weights) * losses).mean() 
+                                # kernel_value = gaussian_kernel(x_val, obs, tau)
+                                kernel_value = torch.ones_like(losses)
+                                weights = kernel_value * torch.exp(log_weights)
+                        val_loss = (weights * losses).mean() 
                         epoch_val_loss += val_loss 
 
                 epoch_val_loss /= num_val_batches       
