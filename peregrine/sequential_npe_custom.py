@@ -311,14 +311,14 @@ if __name__ == "__main__":
     
     def gaussian_kernel(x, x_o, tau):
         """
-        x: Tensor of shape [batch_size, dim]
-        x_o: Tensor of shape [dim]
+        x: Tensor of shape [batch_size, 6, 49152]
+        x_o: Tensor of shape [6, 49152]
         tau: float
         Returns: Tensor of shape [batch_size]
         """
-        diff = x - x_o  # [batch_size, dim]
-        dist_sq = torch.sum(diff ** 2, dim=1)  # [batch_size]
-        return ((2*torch.pi) ** (-3/2)) * (tau ** -3) * torch.exp(-dist_sq / (2 * tau ** 2))  # [batch_size]
+        diff = x - x_o  # [batch_size, 6, 49152]
+        dist_sq = torch.sum(diff ** 2, dim=(1, 2))  # [batch_size]
+        return torch.exp(-dist_sq / (2 * tau ** 2))  # drop normalizer for stability
     
     obs = (
     {key: torch.tensor(obs[key]) for key in ["d_t", "d_f", "d_f_w", "n_t", "n_f", "n_f_w"]}
@@ -411,6 +411,7 @@ if __name__ == "__main__":
         best_validation_loss = float("inf")
         no_improvement_count = 0
         patience = 15 
+        tau = 100
 
         limit = int(num_train_batches)
 
@@ -432,9 +433,8 @@ if __name__ == "__main__":
                         if i > limit:
                             break
                         theta_train = get_theta(sample).to('cuda')                        
-                        x_train = get_data(sample).to('cuda') 
-                        print(f"Shape of x_train: {x_train.shape}")
-                        sys.exit()
+                        x_train = get_data(sample).to('cuda')
+                        mean_norm = torch.sqrt(torch.mean(torch.sum(x_train ** 2, dim=(1, 2))))
                         losses = density_estimator.loss(theta_train, x_train) 
                         if round_id == 1:
                             log_weights = torch.zeros_like(losses)
@@ -444,8 +444,8 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_train)
                                 log_q_theta = proposal.log_prob(theta_train)
                                 log_weights = log_p_theta - log_q_theta
-                                # kernel_value = gaussian_kernel(x_train, obs, tau)
-                                kernel_value = torch.ones_like(losses)
+                                kernel_value = gaussian_kernel(x_train, obs, tau)
+                                # kernel_value = torch.ones_like(losses)
                                 weights = kernel_value * torch.exp(log_weights)
                         loss = (weights * losses).mean()
                         optimizer.zero_grad() 
@@ -477,8 +477,8 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_val)
                                 log_q_theta = proposal.log_prob(theta_val)
                                 log_weights = log_p_theta - log_q_theta
-                                # kernel_value = gaussian_kernel(x_val, obs, tau)
-                                kernel_value = torch.ones_like(losses)
+                                kernel_value = gaussian_kernel(x_val, obs, tau)
+                                # kernel_value = torch.ones_like(losses)
                                 weights = kernel_value * torch.exp(log_weights)
                         val_loss = (weights * losses).mean() 
                         epoch_val_loss += val_loss 
@@ -509,14 +509,25 @@ if __name__ == "__main__":
             posteriors.append(posterior)
 
             proposal = posterior.set_default_x(obs) 
-            num_sims = conf["zarr_params"]["sim_schedule"][round_id]
-            proposal_samples = posterior.sample_batched(
-                torch.Size([num_sims]), x=obs
-            )
+            if round_id != int(conf["snpe"]["num_rounds"]):
+                alpha = 0.2
+                num_sims_proposal = int((1-alpha) * conf["zarr_params"]["sim_schedule"][round_id])
+                num_sims_denfensive = int((alpha) * conf["zarr_params"]["sim_schedule"][round_id])
 
-            proposal_samples = proposal_samples.squeeze(1)
-            proposal_samples = proposal_samples.cpu().numpy()
-            np.save(f"proposal_samples_round_{round_id+1}.npy", proposal_samples)
+                original_proposal_samples = posterior.sample_batched(
+                    torch.Size([num_sims_proposal]), x=obs
+                )
+                original_proposal_samples = original_proposal_samples.squeeze(1)
+                original_proposal_samples = original_proposal_samples.cpu().numpy()
+
+                defensive_samples = joint_prior.sample(
+                    torch.Size([num_sims_denfensive])
+                )
+                defensive_samples = defensive_samples.squeeze(1)
+                defensive_samples = defensive_samples.cpu().numpy()    
+
+                proposal_samples = np.concatenate([original_proposal_samples, defensive_samples])
+                np.save(f"proposal_samples_round_{round_id+1}.npy", proposal_samples)
 
             print(
                 f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training for round {round_id} completed. Saving Density Estimator and Posterior"
