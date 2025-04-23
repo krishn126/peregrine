@@ -413,6 +413,9 @@ if __name__ == "__main__":
         patience = 15 
         tau = 100
 
+        density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
+        density_estimator = density_estimator.to('cuda')
+
         limit = int(num_train_batches)
 
         if (
@@ -444,8 +447,8 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_train)
                                 log_q_theta = proposal.log_prob(theta_train)
                                 log_weights = log_p_theta - log_q_theta
-                                kernel_value = gaussian_kernel(x_train, obs, tau)
-                                # kernel_value = torch.ones_like(losses)
+                                # kernel_value = gaussian_kernel(x_train, obs, tau)
+                                kernel_value = torch.ones_like(losses)
                                 weights = kernel_value * torch.exp(log_weights)
                         loss = (weights * losses).mean()
                         optimizer.zero_grad() 
@@ -477,8 +480,8 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_val)
                                 log_q_theta = proposal.log_prob(theta_val)
                                 log_weights = log_p_theta - log_q_theta
-                                kernel_value = gaussian_kernel(x_val, obs, tau)
-                                # kernel_value = torch.ones_like(losses)
+                                # kernel_value = gaussian_kernel(x_val, obs, tau)
+                                kernel_value = torch.ones_like(losses)
                                 weights = kernel_value * torch.exp(log_weights)
                         val_loss = (weights * losses).mean() 
                         epoch_val_loss += val_loss 
@@ -504,13 +507,14 @@ if __name__ == "__main__":
                     if no_improvement_count >= patience:
                         print("Early stopping triggered.")
                         break  
-
+            
+            density_estimator.eval()
             posterior = DirectPosterior(density_estimator, joint_prior)
             posteriors.append(posterior)
 
             proposal = posterior.set_default_x(obs) 
             if round_id != int(conf["snpe"]["num_rounds"]):
-                alpha = 0.2
+                alpha = 0.0
                 num_sims_proposal = int((1-alpha) * conf["zarr_params"]["sim_schedule"][round_id])
                 num_sims_denfensive = int((alpha) * conf["zarr_params"]["sim_schedule"][round_id])
 
