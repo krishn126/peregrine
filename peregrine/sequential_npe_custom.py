@@ -437,7 +437,6 @@ if __name__ == "__main__":
                             break
                         theta_train = get_theta(sample).to('cuda')                        
                         x_train = get_data(sample).to('cuda')
-                        mean_norm = torch.sqrt(torch.mean(torch.sum(x_train ** 2, dim=(1, 2))))
                         losses = density_estimator.loss(theta_train, x_train) 
                         if round_id == 1:
                             log_weights = torch.zeros_like(losses)
