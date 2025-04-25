@@ -4,8 +4,8 @@ from scipy.stats import linregress
 
 # Sample data
 x = np.array([100, 50, 20, 10, 5, 1])  # simulation number variables
-x_num = np.array([14933992, 14713292, 14628872, 14608732, 14600162, 14594026])  # simulation number variables
-x_num = x_num - 14590290
+x_num = np.array([14933992, 14713292, 14628872, 14608732, 14600162, 14594026])  # total trainable parameters 
+x_num = x_num - 14590290 #trainable parameters minus the embedding network
 y = np.array([-0.55154, -0.26212, -0.04276, 0.46136, 0.53392, 4.14938])  # val loss variables
 
 approx_crb = 52.545037343796665
