@@ -390,7 +390,6 @@ if __name__ == "__main__":
         num_epochs = conf["hparams"]["max_epochs"]
         optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
         scheduler = setup_scheduler(optimizer) 
-        density_estimator = density_estimator.to('cuda')
         step = 0
         epoch_val_loss = 0.0         
 
@@ -507,7 +506,7 @@ if __name__ == "__main__":
                     torch.Size([num_sims_proposal]), x=obs
                 )
                 proposal_samples = proposal_samples.squeeze(1)
-                proposal_samples = proposal_samples.cpu.numpy()
+                proposal_samples = proposal_samples.cpu().numpy()
                 np.save(f"proposal_samples_round_{round_id+1}.npy", proposal_samples)
             
             print(
