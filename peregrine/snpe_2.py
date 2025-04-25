@@ -467,7 +467,7 @@ if __name__ == "__main__":
                             pbar.update(1)
                             pbar.set_postfix(
                                 {
-                                    "Calculating Val Loss for Epoch": f"{epoch}| Round: {round_id}"
+                                    "Calculating Val Loss for Epoch": f"{epoch + 1}| Round: {round_id}"
                                 }
                             ) 
 
