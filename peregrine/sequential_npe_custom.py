@@ -402,7 +402,11 @@ if __name__ == "__main__":
         num_epochs = conf["hparams"]["max_epochs"]
         optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
         scheduler = setup_scheduler(optimizer) 
-        density_estimator = density_estimator.to('cuda')
+        if round_id != 1:
+            density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
+            density_estimator = density_estimator.to('cuda') 
+            optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
+            scheduler = setup_scheduler(optimizer)        
         step = 0
         epoch_val_loss = 0.0         
 
@@ -412,9 +416,6 @@ if __name__ == "__main__":
         no_improvement_count = 0
         patience = 15 
         tau = 100
-
-        density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
-        density_estimator = density_estimator.to('cuda')
 
         limit = int(num_train_batches)
 
@@ -507,7 +508,6 @@ if __name__ == "__main__":
                         print("Early stopping triggered.")
                         break  
             
-            density_estimator.eval()
             posterior = DirectPosterior(density_estimator, joint_prior)
             posteriors.append(posterior)
 
