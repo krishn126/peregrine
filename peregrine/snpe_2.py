@@ -412,7 +412,6 @@ if __name__ == "__main__":
 
             for epoch in range(num_epochs):
                 density_estimator.train() 
-                train_loss_epoch = 0.0
                 with tqdm.tqdm(
                     total = int(num_train_batches), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False
                 ) as pbar: 
@@ -435,7 +434,6 @@ if __name__ == "__main__":
                         optimizer.zero_grad() 
                         loss.backward() 
                         optimizer.step() 
-                        train_loss_epoch += loss.item()
                         wandb.log({f"train_loss_round_{round_id}": loss.item()}) 
                         step += 1
                         pbar.update(1) 
@@ -444,6 +442,7 @@ if __name__ == "__main__":
                                 "Train Loss": f"{loss.item():.4f}| Val Loss: {epoch_val_loss:.4f}| Round: {round_id}"
                             }
                         ) 
+
                 density_estimator.eval() 
                 epoch_val_loss = 0.0
 
@@ -466,6 +465,12 @@ if __name__ == "__main__":
                                     weights = torch.exp(log_weights)
                             val_loss = (weights * losses).mean()
                             epoch_val_loss += val_loss
+                            pbar.update(1)
+                            pbar.set_postfix(
+                                {
+                                    "Calculating Val Loss for Epoch": f"{epoch}| Round: {round_id}"
+                                }
+                            ) 
 
                 epoch_val_loss /= num_val_batches       
                 scheduler.step(epoch_val_loss) 
