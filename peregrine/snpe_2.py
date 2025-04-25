@@ -327,6 +327,13 @@ if __name__ == "__main__":
     prior_samples = prior_samples.cpu().numpy()
     np.save(f"proposal_samples_round_1.npy", prior_samples)
 
+    density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
+    density_estimator = density_estimator.to('cuda')
+
+    num_epochs = conf["hparams"]["max_epochs"]
+    optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
+    scheduler = setup_scheduler(optimizer) 
+
     for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
         # Initialise the zarr store to save the simulations
         start_time = datetime.now()
@@ -384,12 +391,6 @@ if __name__ == "__main__":
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Setting up trainer and network for round {round_id}"
         )
 
-        density_estimator = setup_density_estimator(conf, dummy_theta, dummy_x)
-        density_estimator = density_estimator.to('cuda')
-
-        num_epochs = conf["hparams"]["max_epochs"]
-        optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
-        scheduler = setup_scheduler(optimizer) 
         step = 0
         epoch_val_loss = 0.0         
 
@@ -428,7 +429,8 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_train)
                                 log_q_theta = proposal.log_prob(theta_train)
                                 log_weights = log_p_theta - log_q_theta
-                                weights = torch.exp(log_weights)
+                                weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
+                                weights = weights / weights.sum() 
                         loss = (weights * losses).mean()
                         optimizer.zero_grad() 
                         loss.backward() 
@@ -461,7 +463,8 @@ if __name__ == "__main__":
                                     log_p_theta = joint_prior.log_prob(theta_val)
                                     log_q_theta = proposal.log_prob(theta_val)
                                     log_weights = log_p_theta - log_q_theta
-                                    weights = torch.exp(log_weights)
+                                    weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
+                                    weights = weights / weights.sum() 
                             val_loss = (weights * losses).mean()
                             epoch_val_loss += val_loss
                             pbar.update(1)
