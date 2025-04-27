@@ -272,7 +272,7 @@ if __name__ == "__main__":
 
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    round_id = 3
+    round_id = 4
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
