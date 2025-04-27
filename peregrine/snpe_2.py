@@ -331,8 +331,6 @@ if __name__ == "__main__":
     density_estimator = density_estimator.to('cuda')
 
     num_epochs = conf["hparams"]["max_epochs"]
-    optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
-    scheduler = setup_scheduler(optimizer) 
 
     for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
         # Initialise the zarr store to save the simulations
@@ -401,6 +399,8 @@ if __name__ == "__main__":
         patience = 20
 
         limit = int(num_train_batches)
+        optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
+        scheduler = setup_scheduler(optimizer) 
 
         if (
             not conf["snpe"]["infer_only"]
