@@ -36,6 +36,7 @@ import tqdm
 import wandb
 from torch.optim import AdamW
 import numpy as np
+from matplotlib import pyplot as plt
     
 class SineDistribution(dist.Distribution):
     arg_constraints = {}
@@ -401,6 +402,8 @@ if __name__ == "__main__":
         limit = int(num_train_batches)
         optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
         scheduler = setup_scheduler(optimizer) 
+        overall_weights = []
+        overall_theta = []
 
         if (
             not conf["snpe"]["infer_only"]
@@ -431,6 +434,8 @@ if __name__ == "__main__":
                                 log_weights = log_p_theta - log_q_theta
                                 weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
                                 weights = weights / weights.sum() 
+                        overall_weights.append(weights)
+                        overall_theta.append(theta_train)
                         loss = (weights * losses).mean()
                         optimizer.zero_grad() 
                         loss.backward() 
@@ -495,7 +500,20 @@ if __name__ == "__main__":
                     if no_improvement_count >= patience:
                         print("Early stopping triggered.")
                         break  
-                
+
+            all_weights = torch.cat(overall_weights)
+            all_theta = torch.cat(overall_theta)
+            all_weights = all_weights.cpu().numpy()
+            all_theta = all_theta.cpu().numpy()
+            plt.figure(figsize=(10, 5))
+            plt.hist(all_weights, bins=50, density=True)
+            plt.yscale("log")
+            plt.xlabel("Weights")
+            plt.ylabel("Log Density")
+            plt.title(f"Histogram of Weights after Round {round+1} with Calibration Kernel")
+            plt.xlim(0, max(all_weights)+0.1) 
+            plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_weights_histogram.png", dpi=300, bbox_inches='tight')  
+
             density_estimator.eval()
             posterior = DirectPosterior(density_estimator, joint_prior)
             posteriors.append(posterior)
