@@ -483,7 +483,7 @@ if __name__ == "__main__":
                         f"val_loss_round_{round_id}": epoch_val_loss,
                         f"step_round_{round_id}": step,
                         f"learning_rate_round_{round_id}": learning_rate,
-                        f"epoch_round_{round_id}": epoch,
+                        f"epoch_round_{round_id}": epoch+1,
                     }
                 ) 
 
