@@ -432,8 +432,8 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_train)
                                 log_q_theta = proposal.log_prob(theta_train)
                                 log_weights = log_p_theta - log_q_theta
-                                weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
-                                weights = weights / weights.sum() 
+                                # weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
+                                # weights = weights / weights.sum() 
                         overall_weights.append(weights)
                         overall_theta.append(theta_train)
                         loss = (weights * losses).mean()
@@ -468,8 +468,8 @@ if __name__ == "__main__":
                                     log_p_theta = joint_prior.log_prob(theta_val)
                                     log_q_theta = proposal.log_prob(theta_val)
                                     log_weights = log_p_theta - log_q_theta
-                                    weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
-                                    weights = weights / weights.sum() 
+                                    # weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
+                                    # weights = weights / weights.sum() 
                             val_loss = (weights * losses).mean()
                             epoch_val_loss += val_loss
                             pbar.update(1)
@@ -507,10 +507,11 @@ if __name__ == "__main__":
             all_theta = all_theta.cpu().numpy()
             plt.figure(figsize=(10, 5))
             plt.hist(all_weights, bins=50, density=True)
+            plt.xscale("log")
             plt.yscale("log")
             plt.xlabel("Weights")
             plt.ylabel("Log Density")
-            plt.title(f"Histogram of Weights after Round {round+1} with Calibration Kernel")
+            plt.title(f"Histogram of Weights after Round {round_id} without Calibration Kernel")
             plt.xlim(0, max(all_weights)+0.1) 
             plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_weights_histogram.png", dpi=300, bbox_inches='tight')  
 
