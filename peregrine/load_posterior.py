@@ -423,10 +423,10 @@ if __name__ == "__main__":
             plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
             plt.axvline(x=true_params[:,idx], linestyle='--')
 
-        fig.suptitle(f"SNPE Round {round_id} vs TMNRE", fontsize=20)
+        fig.suptitle(f"SNPE Round {round_id} vs TMNRE Round {round_id}", fontsize=20)
         plt.tight_layout()
         blue_line = mlines.Line2D([], [], color='blue', label=f'SNPE Round {round_id}')
-        orange_line = mlines.Line2D([], [], color='orange', label='TMNRE')
+        orange_line = mlines.Line2D([], [], color='orange', label=f'TMNRE Round {round_id}')
         fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
 
         return fig
@@ -488,8 +488,8 @@ if __name__ == "__main__":
         js_div_dynper = js_div_dynper / 15
 
         print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
-        print(f"Jensen-Shannon Divergence with Peregrine TMNRE: {js_div_per:.4f}")
-        print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE: {js_div_dynper:.4f}")
+        print(f"Jensen-Shannon Divergence with Peregrine TMNRE Round {round_id}: {js_div_per:.4f}")
+        print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE Round {round_id}: {js_div_dynper:.4f}")
     
     js_div_calcs()
     
