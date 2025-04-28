@@ -56,7 +56,6 @@ plt.axhline(y=y_1[10], color='black', linestyle='--', label=f"TMNRE Converged lo
 # Labels and title
 plt.xlabel('Number of Training Simulations')
 plt.ylabel('Shifted Validation Loss (L - L_CR)')
-plt.title('How Validation Loss Changes with Number of Training Simulations for SNPE and TMNRE')
 plt.legend()
 
 # Show the plot

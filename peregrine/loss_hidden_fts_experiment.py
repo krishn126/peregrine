@@ -37,12 +37,11 @@ plt.loglog(x_num, y, 'o', label="Val Loss")  # Plot original data
 #extend line of best fit to x=1
 # x_fit = np.append(x_fit, 1)
 # y_fit = np.append(y_fit, np.exp(intercept) * 1**slope)
-plt.loglog(x_fit, y_fit, 'r--', label=f"Best Fit: y = {np.exp(intercept):.2f}x^{slope:.3f}")  # Best fit line
+plt.loglog(x_fit, y_fit, 'r--', label="Best Fit in Scaling Regime")  # Best fit line
 
 # Labels and title
 plt.xlabel('Number of Trainable Parameters in the Model')
 plt.ylabel('Shifted Validation Loss (L - L_CR)')
-plt.title('How Validation Loss Changes with Number of Trainable Parameters')
 plt.legend()
 
 # Show the plot
