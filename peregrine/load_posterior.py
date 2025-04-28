@@ -272,7 +272,7 @@ if __name__ == "__main__":
 
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    round_id = 4
+    round_id = 3
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -328,7 +328,7 @@ if __name__ == "__main__":
         (-0.1, 0.1),  # geocent_time
     ]
     # # Plot posterior
-    lrs = pd.read_pickle('/data/kn405/Code/peregrine/peregrine/logratios_R7')
+    lrs = pd.read_pickle(f'/data/kn405/Code/peregrine/peregrine/logratios_R{round_id}')
 
     def load_dynesty(folder):
         with open(glob.glob(f"{folder}/dynesty_result.json")[0], "r") as f:
@@ -465,7 +465,7 @@ if __name__ == "__main__":
     
     # #Save Plots
     fig = plot_posterior_npe_tmnre()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_tmnre.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_tmnre_{round_id}.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
