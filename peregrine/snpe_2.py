@@ -434,7 +434,7 @@ if __name__ == "__main__":
                                 log_weights = log_p_theta - log_q_theta
                                 # weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
                                 # weights = weights / weights.sum() 
-                                weights = torch.exp(log_weights)
+                                # weights = torch.exp(log_weights)
                         overall_weights.append(weights)
                         overall_theta.append(theta_train)
                         loss = (weights * losses).mean()
@@ -471,7 +471,7 @@ if __name__ == "__main__":
                                     log_weights = log_p_theta - log_q_theta
                                     # weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
                                     # weights = weights / weights.sum()
-                                    weights = torch.exp(log_weights) 
+                                    # weights = torch.exp(log_weights) 
                             val_loss = (weights * losses).mean()
                             epoch_val_loss += val_loss
                             pbar.update(1)
