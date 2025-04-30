@@ -402,7 +402,7 @@ if __name__ == "__main__":
         num_val_batches = sum(1 for _ in val_data)
         best_validation_loss = float("inf")
         no_improvement_count = 0
-        patience = 20
+        patience = 8
 
         limit = int(num_train_batches)
         optimizer = AdamW(density_estimator.parameters(), lr=1e-3) 
