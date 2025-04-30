@@ -298,42 +298,99 @@ if __name__ == "__main__":
     posterior_samples = posterior_samples.cpu()
     np.save('/data/kn405/Code/peregrine/peregrine/proposal_samples_truncated_prior.npy', posterior_samples)
 
-    def compute_hpd(samples, credible_mass=0.99):
+    def compute_equal_tailed_interval(samples, lower=0.005, upper=0.995):
         """
-        Compute the Highest Posterior Density (HPD) interval for a 1D array of samples.
+        Compute equal-tailed credible interval from quantiles.
+        Returns the [lower, upper] bounds for a 1D array of samples.
         """
-        sorted_samples = np.sort(samples)
-        n = len(samples)
-        interval_idx_inc = int(np.floor(credible_mass * n))
-        n_intervals = n - interval_idx_inc
-        interval_width = sorted_samples[interval_idx_inc:] - sorted_samples[:n_intervals]
+        lower_bound = np.quantile(samples, lower)
+        upper_bound = np.quantile(samples, upper)
+        return lower_bound, upper_bound
 
-        if len(interval_width) == 0:
-            raise ValueError("Not enough samples to compute HPD.")
-
-        min_idx = np.argmin(interval_width)
-        hpd_min = sorted_samples[min_idx]
-        hpd_max = sorted_samples[min_idx + interval_idx_inc]
-
-        return hpd_min, hpd_max
-
-    def compute_hpd_intervals(posterior_samples, credible_mass=0.99):
+    def compute_all_equal_tailed_intervals(posterior_samples, lower=0.005, upper=0.995):
         """
-        Compute HPD intervals for each parameter in posterior_samples.
-        posterior_samples: numpy array of shape [n_samples, n_parameters]
+        Compute equal-tailed credible intervals for each parameter.
+        posterior_samples: numpy array of shape [n_samples, 1, n_parameters]
+        Returns: array of shape [n_parameters, 2]
         """
-        n_params = posterior_samples.shape[1]
-        hpd_intervals = []
+        n_params = posterior_samples.shape[2]
+        intervals = []
 
         for i in range(n_params):
-            hpd = compute_hpd(posterior_samples[:, i], credible_mass=credible_mass)
-            hpd_intervals.append(hpd)
+            interval = compute_equal_tailed_interval(posterior_samples[:, 0, i], lower, upper)
+            intervals.append(interval)
 
-        return np.array(hpd_intervals)  # shape [n_params, 2]
+        return np.array(intervals)
 
     # Example usage:
     # posterior_samples is a NumPy array of shape [1000, 15]
-    hpd_99 = compute_hpd_intervals(posterior_samples, credible_mass=0.99)
+    print(posterior_samples.shape)
+    hpd_99 = compute_all_equal_tailed_intervals(posterior_samples)
+    print(hpd_99)
+
+    def plot_posterior_vs_prior():
+        fig = plt.figure(figsize=(15, 8))
+
+        for idx in range(15):
+            ax = plt.subplot(5, 3, idx + 1)
+            ax.set_title(f"{order[idx]}")
+            plt.hist([posterior_samples[:,0,idx].numpy()], bins=100, density=True, alpha=0.7)
+            plt.axvline(x=true_params[:,idx], linestyle='--')
+            plt.axvline(x = hpd_99[idx,0], linestyle='--')
+            plt.axvline(x = hpd_99[idx,1], linestyle='--')
+
+        fig.suptitle(f"SNPE Round {round_id} and HPD", fontsize=20)
+        plt.tight_layout()
+        blue_line = mlines.Line2D([], [], color='blue', label='SNPE')
+        fig.legend(handles=[blue_line], loc="upper right", fontsize=10)
+
+        return fig
+
+    fig = plot_posterior_vs_prior()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_hpd.png", dpi=300, bbox_inches='tight')
+
+    def sample_uniform_within_intervals(intervals, n_samples):
+        """
+        Sample uniformly within axis-aligned intervals.
+        
+        Parameters:
+            intervals: numpy array of shape [n_params, 2], where each row is [lower, upper]
+            n_samples: int, number of samples to draw
+
+        Returns:
+            samples: numpy array of shape [n_samples, n_params]
+        """
+        lower_bounds = intervals[:, 0]
+        upper_bounds = intervals[:, 1]
+        
+        u = np.random.uniform(0, 1, size=(n_samples, len(intervals)))
+        samples = lower_bounds + u * (upper_bounds - lower_bounds)
+        
+        return samples
+    
+    uniform_samples = sample_uniform_within_intervals(hpd_99, n_samples=200000)
+    np.save("proposal_samples_truncated.npy", uniform_samples)
+
+    def plot_truncated_uniform():
+        fig = plt.figure(figsize=(15, 8))
+
+        for idx in range(15):
+            ax = plt.subplot(5, 3, idx + 1)
+            ax.set_title(f"{order[idx]}")
+            plt.hist([uniform_samples[:,idx]], bins=100, density=True, alpha=0.7)
+            plt.axvline(x=true_params[:,idx], linestyle='--')
+
+        fig.suptitle(f"Truncated Prior Regions", fontsize=20)
+        plt.tight_layout()
+
+        return fig
+    
+    fig = plot_truncated_uniform()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/truncated_prior_samples.png", dpi=300, bbox_inches='tight')
+
+
+
+
 
 
 
