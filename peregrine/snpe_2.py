@@ -335,6 +335,7 @@ if __name__ == "__main__":
 
     for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
         # Initialise the zarr store to save the simulations
+        proposal_samples = np.load('/data/kn405/Code/peregrine/peregrine/proposal_samples_truncated_prior.npy')
         start_time = datetime.now()
         print(
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Initialising zarrstore for round {round_id}"
@@ -370,8 +371,11 @@ if __name__ == "__main__":
                 p.wait()
         else:
             if round_id == 1:
-                print("Using Prior Samples for Simulations")
-                simulator = init_simulator(conf)
+                # print("Using Prior Samples for Simulations")
+                # simulator = init_simulator(conf)
+                # simulate(simulator, store, conf)
+                print("Using Proposal Samples for Simulations")
+                simulator = init_simulator(conf, proposal_samples=proposal_samples) 
                 simulate(simulator, store, conf)
             else:
                 print("Using Proposal Samples for Simulations")
