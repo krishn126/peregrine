@@ -310,22 +310,39 @@ if __name__ == "__main__":
     #save posterior samples
     np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples.npy', posterior_samples)
 
+    # ranges = [
+    #     (0.125, 1.0),  # mass_ratio
+    #     (25.0, 100.0),  # chirp_mass
+    #     (0.0, 3.14159),  # theta_jn
+    #     (0.0, 6.28318),  # phase
+    #     (0.0, 3.14159),  # tilt_1
+    #     (0.0, 3.14159),  # tilt_2
+    #     (0.05, 1.0),  # a_1
+    #     (0.05, 1.0),  # a_2
+    #     (0.0, 6.28318),  # phi_12
+    #     (0.0, 6.28318),  # phi_jl
+    #     (100.0, 1500.0),  # luminosity_distance
+    #     (-1.57079, 1.57079),  # dec
+    #     (0.0, 6.28318),  # ra
+    #     (0.0, 3.14159),  # psi
+    #     (-0.1, 0.1),  # geocent_time
+    # ]
     ranges = [
-        (0.125, 1.0),  # mass_ratio
-        (25.0, 100.0),  # chirp_mass
-        (0.0, 3.14159),  # theta_jn
-        (0.0, 6.28318),  # phase
-        (0.0, 3.14159),  # tilt_1
-        (0.0, 3.14159),  # tilt_2
-        (0.05, 1.0),  # a_1
-        (0.05, 1.0),  # a_2
-        (0.0, 6.28318),  # phi_12
-        (0.0, 6.28318),  # phi_jl
-        (100.0, 1500.0),  # luminosity_distance
-        (-1.57079, 1.57079),  # dec
-        (0.0, 6.28318),  # ra
-        (0.0, 3.14159),  # psi
-        (-0.1, 0.1),  # geocent_time
+        (3.576977252960205078e-01,9.999501705169677734e-01),  # mass_ratio
+        (2.849053955078125000e+01,3.366965866088867188e+01),  # chirp_mass
+        (1.082168892025947571e-02,1.287480473518371582e+00),  # theta_jn
+        (5.015052738599479198e-04,6.282635688781738281e+00),  # phase
+        (1.804005727171897888e-02,3.125791549682617188e+00),  # tilt_1
+        (1.731673255562782288e-02,3.126497983932495117e+00),  # tilt_2
+        (5.006928741931915283e-02,9.999464750289916992e-01),  # a_1
+        (5.009920150041580200e-02,9.999063014984130859e-01),  # a_2
+        (7.937396294437348843e-04,6.282266139984130859e+00),  # phi_12
+        (7.755699157714843750e-01,4.403653621673583984e+00),  # phi_jl
+        (3.640895080566406250e+02,1.145086425781250000e+03),  # luminosity_distance
+        (-6.177333369851112366e-02,2.037448883056640625e-01),  # dec
+        (5.483808994293212891e+00,5.640668869018554688e+00),  # ra
+        (2.063730207737535238e-04,3.141472339630126953e+00),  # psi
+        (-3.634473541751503944e-03,2.502904739230871201e-03),  # geocent_time
     ]
     # # Plot posterior
     lrs = pd.read_pickle(f'/data/kn405/Code/peregrine/peregrine/logratios_R{round_id}')
@@ -464,8 +481,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = plot_posterior_npe_tmnre()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_tmnre_round_{round_id}.png", dpi=300, bbox_inches='tight')
+    fig = corner_plot()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_dynesty.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
