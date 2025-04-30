@@ -363,7 +363,8 @@ if __name__ == "__main__":
                         "run_parallel_snpe.py",
                         f"{conf['zarr_params']['store_path']}/config_{conf['zarr_params']['run_id']}.txt",
                         str(round_id),
-                        f"proposal_samples_round_{round_id}.npy"
+                        "proposal_samples_truncated.npy"
+                        # f"proposal_samples_round_{round_id}.npy"
                     ]
                 )
                 processes.append(p)
