@@ -464,8 +464,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = corner_plot()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_dynesty).png", dpi=300, bbox_inches='tight')
+    fig = plot_posterior_npe_tmnre()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_tmnre_round_{round_id}.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
