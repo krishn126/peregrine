@@ -303,8 +303,8 @@ if __name__ == "__main__":
     obs = torch.cat(obs, dim=1)
     obs = obs.to('cuda')
     
-    loaded_density_estimator = torch.load(f'/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt')
-    loaded_posterior = torch.load(f'/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt')
+    loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_de.pt')
+    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     posterior_samples = posterior_samples.cpu()
     #save posterior samples
@@ -473,10 +473,9 @@ if __name__ == "__main__":
 
         fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
         corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
-        fig.suptitle('TSNPE vs Dynesty', fontsize=50)
-        blue_line = mlines.Line2D([], [], color='blue', label=f'TSNPE')
-        red_line = mlines.Line2D([], [], color='red', label='Dynesty')
-        fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
+        orange_line = mlines.Line2D([], [], color='orange', label=f'TSNPE')
+        green_line = mlines.Line2D([], [], color='green', label='Dynesty')
+        fig.legend(handles=[orange_line, green_line], loc="upper right", fontsize=40) # Add the legend
 
         return fig
     
