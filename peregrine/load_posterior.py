@@ -272,7 +272,7 @@ if __name__ == "__main__":
 
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    round_id = 1
+    round_id = 7
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -388,8 +388,8 @@ if __name__ == "__main__":
         pdf_q = kde_q(eval_points)
         
         # Normalize to ensure they sum to 1 (avoid numerical issues)
-        pdf_p /= pdf_p.sum()
-        pdf_q /= pdf_q.sum()
+        pdf_p /= np.trapz(pdf_p, eval_points)
+        pdf_q /= np.trapz(pdf_q, eval_points)
         
         # Compute mixed distribution
         pdf_m = 0.5 * (pdf_p + pdf_q)
@@ -404,18 +404,15 @@ if __name__ == "__main__":
     def js_divergence_hist(samples_p, samples_q, weights, bins=50):
         hist_p, bin_edges = np.histogram(samples_p, bins=bins, density=True)
         hist_q, _ = np.histogram(samples_q, weights=weights, bins=bin_edges, density=True)
-        
-        # Convert to probabilities
-        hist_p += 1e-10  # Avoid log(0)
-        hist_q += 1e-10
-        
+                
         hist_p /= hist_p.sum()
         hist_q /= hist_q.sum()
         
         hist_m = 0.5 * (hist_p + hist_q)
         
-        kl_p_m = entropy(hist_p, hist_m)
-        kl_q_m = entropy(hist_q, hist_m)
+        mask = (hist_p > 0) & (hist_q > 0)
+        kl_p_m = entropy(hist_p[mask], hist_m[mask])
+        kl_q_m = entropy(hist_q[mask], hist_m[mask])
         
         js_div = 0.5 * (kl_p_m + kl_q_m)
         return js_div
