@@ -2,8 +2,8 @@ print(
     r"""
              /'{>           Initialising PEREGRINE
          ____) (____        ----------------------
-       //'--;   ;--'\\      Type: Coverage Test
-      ///////\_/\\\\\\\     Authors: U.Bhardwaj, J.Alvey
+       //'--;   ;--'\\      Type: SNPE Coverage Test
+      ///////\_/\\\\\\\     Authors: U.Bhardwaj, J.Alvey, K.Nanavati
              m m            Version: v0.0.1 | April 2023
 """
 )
@@ -249,6 +249,7 @@ if __name__ == "__main__":
                         "run_parallel_snpe.py",
                         f"{conf['zarr_params']['store_path']}/config_{conf['zarr_params']['run_id']}.txt",
                         str(round_id),
+                        f"proposal_samples_round_{round_id}.npy"
                     ]
                 )
                 processes.append(p)
@@ -344,8 +345,8 @@ if __name__ == "__main__":
 
         return d
     
-    loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/density_estimator.pt')
-    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/posterior.pt')
+    loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/final_round_zoomed_in_de.pt')
+    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/final_round_zoomed_in_posterior.pt')
     limit = 1
 
     for i, sample in enumerate(train_data):
@@ -355,58 +356,58 @@ if __name__ == "__main__":
         x_train = get_data(sample)
     
     #Manual coverage test
-    # posterior_samples = []
-    # for j in range(40):
-    #         tester = x_train[j, :, :]
-    #         posterior_samples.append(loaded_posterior.sample_batched(torch.Size([100]), x=tester))
+    posterior_samples = []
+    for j in range(50):
+            tester = x_train[j, :, :]
+            posterior_samples.append(loaded_posterior.sample_batched(torch.Size([10000]), x=tester))
     
     
-    # def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 15)):
-    #     _, num_parameters = true_parameters.shape
-    #     num_levels = credibility_levels.shape[0]
-    #     empirical_coverages = torch.zeros(num_parameters, num_levels)
+    def compute_coverage_per_param(num_sims, true_parameters, credibility_levels=torch.linspace(0.05, 0.95, 15)):
+        _, num_parameters = true_parameters.shape
+        num_levels = credibility_levels.shape[0]
+        empirical_coverages = torch.zeros(num_parameters, num_levels)
 
-    #     # Sort posterior samples along the sample axis
-    #     for j in range(num_sims):
-    #         post_samples = posterior_samples[j]
-    #         post_samples = post_samples.squeeze(1)
-    #         sorted_samples, _ = torch.sort(post_samples, dim=0)
-    #         num_samples, _ = sorted_samples.shape
+        # Sort posterior samples along the sample axis
+        for j in range(num_sims):
+            post_samples = posterior_samples[j]
+            post_samples = post_samples.squeeze(1)
+            sorted_samples, _ = torch.sort(post_samples, dim=0)
+            num_samples, _ = sorted_samples.shape
 
-    #         for i, level in enumerate(credibility_levels):
-    #             lower_idx = int((1 - level) / 2 * num_samples)
-    #             upper_idx = int((1 + level) / 2 * num_samples)
+            for i, level in enumerate(credibility_levels):
+                lower_idx = int((1 - level) / 2 * num_samples)
+                upper_idx = int((1 + level) / 2 * num_samples)
 
-    #             lower_bounds = sorted_samples[lower_idx, :]
-    #             upper_bounds = sorted_samples[upper_idx, :]
-    #             # Compute coverage per parameter
-    #             for k in range(num_parameters):
-    #                 if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
-    #                     empirical_coverages[k, i] += 1
+                lower_bounds = sorted_samples[lower_idx, :]
+                upper_bounds = sorted_samples[upper_idx, :]
+                # Compute coverage per parameter
+                for k in range(num_parameters):
+                    if true_parameters[j, k] >= lower_bounds[k] and true_parameters[j, k] <= upper_bounds[k]:
+                        empirical_coverages[k, i] += 1
             
-    #     empirical_coverages /= num_sims
+        empirical_coverages /= num_sims
 
-    #     return credibility_levels.numpy(), empirical_coverages.numpy()
+        return credibility_levels.numpy(), empirical_coverages.numpy()
 
-    # def plot_coverage(credibility_levels, empirical_coverages):
-    #     num_parameters = empirical_coverages.shape[0]
-    #     plt.figure(figsize=(15, 8))
-    #     # Plot coverage for each parameter
-    #     for i in range(num_parameters):
-    #         ax = plt.subplot(5, 3, i + 1)
-    #         ax.set_title(f"{order[i]}", fontsize=10)
-    #         plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
-    #         plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
-    #         plt.grid(True)
+    def plot_coverage(credibility_levels, empirical_coverages):
+        num_parameters = empirical_coverages.shape[0]
+        plt.figure(figsize=(15, 8))
+        # Plot coverage for each parameter
+        for i in range(num_parameters):
+            ax = plt.subplot(5, 3, i + 1)
+            ax.set_title(f"{order[i]}", fontsize=10)
+            plt.plot(credibility_levels, empirical_coverages[i, :], marker='o', linestyle='-', alpha=0.7, label=f"Param {order[i]}")
+            plt.plot([0, 1], [0, 1], 'k--', label="Ideal Calibration") # Reference y=x line for perfect calibration
+            plt.grid(True)
 
-    #     plt.suptitle("Coverage Test for Each Parameter")
-    #     plt.tight_layout()
-    #     plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
+        plt.suptitle("Coverage Test for Each Parameter")
+        plt.tight_layout()
+        plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/empirical_coverage_tests.png", dpi=300, bbox_inches='tight')
 
-    # # Compute and plot empirical coverage
+    # Compute and plot empirical coverage
  
-    # credibility_levels, empirical_coverages = compute_coverage_per_param(40, theta_train)
-    # plot_coverage(credibility_levels, empirical_coverages)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(40, theta_train)
+    plot_coverage(credibility_levels, empirical_coverages)
 
     #TARP test - not working? 
     # ecp, alpha = run_tarp(
