@@ -471,11 +471,11 @@ if __name__ == "__main__":
     def corner_plot(): 
         fig = plt.figure(figsize=(15, 8))       
 
-        fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
-        corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
-        orange_line = mlines.Line2D([], [], color='orange', label=f'TSNPE')
+        fig = corner.corner(posterior_samples[:,0,:].numpy(), color='purple', range=ranges, labels=order, hist_kwargs={"density": True})
+        corner.corner(dynesty_posterior, color='green', fig=fig, range=ranges, hist_kwargs={"density": True})
+        purple_line = mlines.Line2D([], [], color='purple', label=f'TSNPE')
         green_line = mlines.Line2D([], [], color='green', label='Dynesty')
-        fig.legend(handles=[orange_line, green_line], loc="upper right", fontsize=40) # Add the legend
+        fig.legend(handles=[purple_line, green_line], loc="upper right", fontsize=40) # Add the legend
 
         return fig
     
