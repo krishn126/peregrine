@@ -272,7 +272,7 @@ if __name__ == "__main__":
 
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    round_id = 4
+    round_id = 1
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -473,8 +473,8 @@ if __name__ == "__main__":
 
         fig = corner.corner(posterior_samples[:,0,:].numpy(), color='blue', range=ranges, labels=order, hist_kwargs={"density": True})
         corner.corner(dynesty_posterior, color='red', fig=fig, range=ranges, hist_kwargs={"density": True})
-        fig.suptitle(f'SNPE Round {round_id} vs Dynesty', fontsize=50)
-        blue_line = mlines.Line2D([], [], color='blue', label=f'SNPE Round {round_id}')
+        fig.suptitle('TSNPE vs Dynesty', fontsize=50)
+        blue_line = mlines.Line2D([], [], color='blue', label=f'TSNPE')
         red_line = mlines.Line2D([], [], color='red', label='Dynesty')
         fig.legend(handles=[blue_line, red_line], loc="upper right", fontsize=40) # Add the legend
 
@@ -482,7 +482,7 @@ if __name__ == "__main__":
     
     # #Save Plots
     fig = corner_plot()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_{round_id}_vs_dynesty.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/truncated_snpe_vs_dynesty.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
