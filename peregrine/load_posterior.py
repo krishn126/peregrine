@@ -150,23 +150,23 @@ class JointPriorTensor(dist.Distribution):
             log_prob_val = self.priors[key].log_prob(sample_val)
             log_probs.append(log_prob_val)
         return sum(log_probs)
-
+    
 def move_priors_to_device(priors, device):
-    new_priors = {}
-    for key, p in priors.items():
-        if isinstance(p, dist.Uniform):
-            new_priors[key] = dist.Uniform(
-                p.low.to(device),
-                p.high.to(device)
-            )
-        elif isinstance(p, dist.Normal):
-            new_priors[key] = dist.Normal(
-                p.loc.to(device),
-                p.scale.to(device)
-            )
-        elif isinstance(p, SineDistribution) or isinstance(p, CosineDistribution):
-            new_priors[key] = p.to(device)
-    return new_priors
+        new_priors = {}
+        for key, p in priors.items():
+            if isinstance(p, dist.Uniform):
+                new_priors[key] = dist.Uniform(
+                    p.low.to(device),
+                    p.high.to(device)
+                )
+            elif isinstance(p, dist.Normal):
+                new_priors[key] = dist.Normal(
+                    p.loc.to(device),
+                    p.scale.to(device)
+                )
+            elif isinstance(p, SineDistribution) or isinstance(p, CosineDistribution):
+                new_priors[key] = p.to(device)
+        return new_priors
 
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -303,8 +303,7 @@ if __name__ == "__main__":
     obs = torch.cat(obs, dim=1)
     obs = obs.to('cuda')
     
-    loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_de.pt')
-    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_posterior.pt')
+    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/final_round_zoomed_in_posterior.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     posterior_samples = posterior_samples.cpu()
     #save posterior samples
@@ -478,7 +477,7 @@ if __name__ == "__main__":
     
     # #Save Plots
     fig = corner_plot()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/truncated_snpe_vs_dynesty.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/zoomed_in_npe_vs_dynesty.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
