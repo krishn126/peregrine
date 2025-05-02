@@ -357,7 +357,7 @@ if __name__ == "__main__":
     
     #Manual coverage test
     posterior_samples = []
-    for j in range(50):
+    for j in range(100):
             tester = x_train[j, :, :]
             posterior_samples.append(loaded_posterior.sample_batched(torch.Size([10000]), x=tester))
     
@@ -406,7 +406,7 @@ if __name__ == "__main__":
 
     # Compute and plot empirical coverage
  
-    credibility_levels, empirical_coverages = compute_coverage_per_param(50, theta_train)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(40, theta_train)
     plot_coverage(credibility_levels, empirical_coverages)
 
     #TARP test - not working? 
