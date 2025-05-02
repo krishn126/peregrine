@@ -272,7 +272,7 @@ if __name__ == "__main__":
 
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    round_id = 7
+    round_id = 3
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -303,11 +303,11 @@ if __name__ == "__main__":
     obs = torch.cat(obs, dim=1)
     obs = obs.to('cuda')
     
-    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_posterior.pt')
+    loaded_posterior = torch.load('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_3_posterior_snpe_weights.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     posterior_samples = posterior_samples.cpu()
     #save posterior samples
-    np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples_tsnpe.npy', posterior_samples)
+    np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples_snpe_round_3_weights.npy', posterior_samples)
 
     # ranges = [
     #     (0.125, 1.0),  # mass_ratio
@@ -476,8 +476,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    # fig = corner_plot()
-    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/zoomed_in_npe_vs_dynesty.png", dpi=300, bbox_inches='tight')
+    fig = plot_posterior_npe_tmnre()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_3_snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():
