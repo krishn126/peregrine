@@ -307,7 +307,7 @@ if __name__ == "__main__":
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
     posterior_samples = posterior_samples.cpu()
     #save posterior samples
-    np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples.npy', posterior_samples)
+    np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples_tsnpe.npy', posterior_samples)
 
     # ranges = [
     #     (0.125, 1.0),  # mass_ratio
@@ -476,8 +476,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = corner_plot()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/zoomed_in_npe_vs_dynesty.png", dpi=300, bbox_inches='tight')
+    # fig = corner_plot()
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/zoomed_in_npe_vs_dynesty.png", dpi=300, bbox_inches='tight')
 
     #JS Divergence Calculations 
     def js_div_calcs():

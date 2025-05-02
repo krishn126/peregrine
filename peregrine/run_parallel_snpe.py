@@ -16,12 +16,12 @@ if __name__ == "__main__":
     if coverage:
         conf["zarr_params"]["chunk_size"] = 50
     if round_id == 1:
-        proposal_samples_path = args[2]
-        proposal_samples = np.load(proposal_samples_path)
-        print(f"Using proposal samples from {proposal_samples_path}")
-        simulator = init_simulator(conf, bounds=None, proposal_samples=proposal_samples)
-        # bounds = load_bounds(conf, round_id)
-        # simulator = init_simulator(conf, bounds=bounds, proposal_samples=None)
+        # proposal_samples_path = args[2]
+        # proposal_samples = np.load(proposal_samples_path)
+        # print(f"Using proposal samples from {proposal_samples_path}")
+        # simulator = init_simulator(conf, bounds=None, proposal_samples=proposal_samples)
+        bounds = load_bounds(conf, round_id)
+        simulator = init_simulator(conf, bounds=bounds, proposal_samples=None)
     else:
         proposal_samples_path = args[2]
         proposal_samples = np.load(proposal_samples_path)

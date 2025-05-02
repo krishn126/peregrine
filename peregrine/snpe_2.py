@@ -335,7 +335,6 @@ if __name__ == "__main__":
 
     for round_id in range(1, int(conf["snpe"]["num_rounds"]) + 1):
         # Initialise the zarr store to save the simulations
-        proposal_samples = np.load('/data/kn405/Code/peregrine/peregrine/proposal_samples_truncated.npy')
         start_time = datetime.now()
         print(
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Initialising zarrstore for round {round_id}"
@@ -372,12 +371,12 @@ if __name__ == "__main__":
                 p.wait()
         else:
             if round_id == 1:
-                # print("Using Prior Samples for Simulations")
-                # simulator = init_simulator(conf)
-                # simulate(simulator, store, conf)
-                print("Using Truncated Proposal Samples for Simulations")
-                simulator = init_simulator(conf, proposal_samples=proposal_samples) 
+                print("Using Prior Samples for Simulations")
+                simulator = init_simulator(conf)
                 simulate(simulator, store, conf)
+                # print("Using Truncated Proposal Samples for Simulations")
+                # simulator = init_simulator(conf, proposal_samples=proposal_samples) 
+                # simulate(simulator, store, conf)
             else:
                 print("Using Proposal Samples for Simulations")
                 simulator = init_simulator(conf, proposal_samples=proposal_samples) 
@@ -437,9 +436,9 @@ if __name__ == "__main__":
                                 log_p_theta = joint_prior.log_prob(theta_train)
                                 log_q_theta = proposal.log_prob(theta_train)
                                 log_weights = log_p_theta - log_q_theta
-                                # weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
-                                # weights = weights / weights.sum() 
-                                # weights = torch.exp(log_weights)
+                                weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
+                                weights = weights / weights.sum() 
+                                weights = torch.exp(log_weights)
                         overall_weights.append(weights)
                         overall_theta.append(theta_train)
                         loss = (weights * losses).mean()
@@ -474,9 +473,9 @@ if __name__ == "__main__":
                                     log_p_theta = joint_prior.log_prob(theta_val)
                                     log_q_theta = proposal.log_prob(theta_val)
                                     log_weights = log_p_theta - log_q_theta
-                                    # weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
-                                    # weights = weights / weights.sum()
-                                    # weights = torch.exp(log_weights) 
+                                    weights = torch.exp(log_weights - torch.logsumexp(log_weights, dim=0))
+                                    weights = weights / weights.sum()
+                                    weights = torch.exp(log_weights) 
                             val_loss = (weights * losses).mean()
                             epoch_val_loss += val_loss
                             pbar.update(1)
@@ -541,6 +540,6 @@ if __name__ == "__main__":
             print(
             f"{datetime.now().strftime('%a %d %b %H:%M:%S')} | [snpe.py] | Training for round {round_id} completed. Saving Density Estimator and Posterior"
             )
-            torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe.pt")
-            torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe.pt")
+            torch.save(density_estimator, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_density_estimator_snpe_weights.pt")
+            torch.save(posterior, f"/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_{round_id}_posterior_snpe_weights.pt")
             
