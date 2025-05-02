@@ -272,7 +272,7 @@ if __name__ == "__main__":
 
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    round_id = 3
+    round_id = 7
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -303,11 +303,16 @@ if __name__ == "__main__":
     obs = torch.cat(obs, dim=1)
     obs = obs.to('cuda')
     
-    loaded_posterior = torch.load('/data/kn405/Code/peregrine_snpe/peregrine/peregrine/round_3_posterior_snpe_weights.pt')
+    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/round_3_posterior_snpe_weights.pt')
     posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
-    posterior_samples = posterior_samples.cpu()
+    posterior_samples_round_3_snpe = posterior_samples.cpu()
+    loaded_posterior_2 = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_posterior.pt')
+    posterior_samples = loaded_posterior_2.sample_batched(torch.Size([100000]), x=obs)
+    posterior_samples_tsnpe = posterior_samples.cpu()
     #save posterior samples
-    np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples_snpe_round_3_weights.npy', posterior_samples)
+    np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples_snpe_3.npy', posterior_samples_round_3_snpe)
+    np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples_tsnpe.npy', posterior_samples_tsnpe)
+
 
     # ranges = [
     #     (0.125, 1.0),  # mass_ratio
@@ -476,32 +481,46 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = plot_posterior_npe_tmnre()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_3_snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
-
+    # fig = plot_posterior_npe_tmnre()
+    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_3_snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
+    posterior_samples_zoom_in = np.load("/data/kn405/Code/peregrine/peregrine/posterior_samples_zoom_in_npe.npy")
     #JS Divergence Calculations 
     def js_div_calcs():
         js_div_dyn = 0.0
         js_div_per = 0.0
         js_div_dynper = 0.0
+        js_div_snpe_tsnpe = 0.0
+        js_div_snpe_zoom_in = 0.0
+        js_div_tsnpe_zoom_in = 0.0
 
         for i in range(15):
-            samples_p = posterior_samples[:,0,i].numpy()
+            samples_p = posterior_samples_round_3_snpe[:,0,i].numpy()
             samples_q = dynesty_posterior[:,i]
             samples_t = lrs.params[:,i,0].numpy()
+            samples_r = posterior_samples_tsnpe[:,0,i].numpy()
+            samples_s = posterior_samples_zoom_in[:,0,i]
             logratios = lrs.logratios[:,i].numpy()
             weights = np.exp(logratios)
             js_div_dyn += js_divergence(samples_p, samples_q)
             js_div_per += js_divergence_hist(samples_p, samples_t, weights)
             js_div_dynper += js_divergence_hist(samples_q, samples_t, weights)
+            js_div_snpe_tsnpe += js_divergence(samples_p, samples_r)
+            js_div_snpe_zoom_in += js_divergence(samples_p, samples_s)
+            js_div_tsnpe_zoom_in += js_divergence(samples_r, samples_s)
         
         js_div_dyn = js_div_dyn / 15
         js_div_per = js_div_per / 15
         js_div_dynper = js_div_dynper / 15
+        js_div_snpe_tsnpe = js_div_snpe_tsnpe / 15
+        js_div_snpe_zoom_in = js_div_snpe_zoom_in / 15
+        js_div_tsnpe_zoom_in = js_div_tsnpe_zoom_in / 15
 
         print(f"Jensen-Shannon Divergence with Dynesty: {js_div_dyn:.4f}")
         print(f"Jensen-Shannon Divergence with Peregrine TMNRE Round {round_id}: {js_div_per:.4f}")
         print(f"Jensen-Shannon Divergence between Dynesty and Peregrine TMNRE Round {round_id}: {js_div_dynper:.4f}")
+        print(f"Jensen-Shannon Divergence between SNPE Round 3 and TSNPE: {js_div_snpe_tsnpe:.4f}")
+        print(f"Jensen-Shannon Divergence between Zoomed In NPE and SNPE Round 3: {js_div_snpe_zoom_in:.4f}")
+        print(f"Jensen-Shannon Divergence between Zoomed In NPE and TSNPE: {js_div_tsnpe_zoom_in:.4f}")
     
     js_div_calcs()
     
