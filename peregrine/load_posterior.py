@@ -498,8 +498,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = plot_posterior_npe_tmnre()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_3_snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
+    fig = corner_plot()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tsnpe_vs_dynesty.png", dpi=300, bbox_inches='tight')
     posterior_samples_zoom_in = np.load("/data/kn405/Code/peregrine/peregrine/posterior_samples_zoom_in_npe.npy")
     #JS Divergence Calculations 
     def js_div_calcs():

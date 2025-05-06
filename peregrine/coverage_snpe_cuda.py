@@ -54,130 +54,136 @@ ranges = [
     ]
 
 class SineDistribution(dist.Distribution):
-    """
-    Custom sine-distributed probability distribution over [0, pi],
-    defined by p(x) = (1/2) * sin(x).
-    """   
-    support = dist.constraints.interval(torch.tensor([0.0]), torch.pi)  # Support is [0, pi]
+    arg_constraints = {}
 
-    def __init__(self, validate_args=None):
-        self.low = torch.tensor([0.0]) # Lower bound
-        self.high = torch.pi
+    def __init__(self, device='cpu', validate_args=None):
         super().__init__(validate_args=validate_args)
-        
-    
+        self.device = device
+
+    @property
+    def support(self):
+        return dist.constraints.interval(0.0, torch.pi)
+
+    def to(self, device):
+        return SineDistribution(device=device)
+
     def sample(self, sample_shape=torch.Size()):
-        """
-        Uses inverse CDF sampling: x = arccos(1 - U), where U ~ Uniform(0,1)
-        """
-        u = torch.rand(sample_shape)
-        return torch.acos(1 - u)  # Returns samples in [0, pi]
+        u = torch.rand(sample_shape, device=self.device)
+        return torch.acos(1 - 2 * u)
 
     def log_prob(self, x):
-        """
-        Log probability of the sine distribution: log( (1/2) * sin(x) )
-        """
-        inside_support = (x >= torch.tensor([0.0])) & (x <= torch.pi)
+        x = x.to(self.device)
+        inside_support = (x >= 0.0) & (x <= torch.pi)
         log_probs = torch.where(
             inside_support,
-            torch.log(torch.tensor([0.5]) * torch.sin(x)),  # log(p(x))
-            torch.tensor(float("-inf"))  # Log prob is -inf outside support
-        )
-        return log_probs 
-
-class CosineDistribution(dist.Distribution):
-    """
-    Custom cosine-distributed probability distribution over [-pi/2, pi/2],
-    defined by p(x) = (1/2) * cos(x).
-    """
-    support = dist.constraints.interval(-torch.pi / 2, torch.pi / 2)  # Support is [-π/2, π/2]
-
-    def __init__(self, validate_args=None):
-        self.low = -torch.pi / 2  # Lower bound
-        self.high = torch.pi / 2
-        super().__init__(validate_args=validate_args)
-        
-    
-    def sample(self, sample_shape=torch.Size()):
-        """
-        Uses inverse CDF sampling: x = arcsin(2U - 1), where U ~ Uniform(0,1)
-        """
-        u = torch.rand(sample_shape)
-        return torch.asin(2 * u - 1)  # Returns samples in [-π/2, π/2]
-
-    def log_prob(self, x):
-        """
-        Log probability of the cosine distribution: log( (1/2) * cos(x) )
-        """
-        inside_support = (x >= -torch.pi / 2) & (x <= torch.pi / 2)
-        log_probs = torch.where(
-            inside_support,
-            torch.log(torch.tensor([0.5]) * torch.cos(x)),  # log(p(x))
-            torch.tensor(float("-inf"))  # Log prob is -inf outside support
+            torch.log(0.5 * torch.sin(x)),
+            torch.tensor(float("-inf"), device=self.device)
         )
         return log_probs
 
-class JointPriorTensor(dist.Distribution):
+class CosineDistribution(dist.Distribution):
+    arg_constraints = {}
 
-    lows = torch.tensor([r[0] for r in ranges])
-    highs = torch.tensor([r[1] for r in ranges])
-    support = dist.constraints.independent(dist.constraints.interval(lows, highs), 1)
+    def __init__(self, device='cpu', validate_args=None):
+        super().__init__(validate_args=validate_args)
+        self.device = device
 
-    def __init__(self, priors, keys_order=None):
-        """
-        Args:
-            priors (dict): A dictionary of individual priors.
-            keys_order (list, optional): An ordered list of keys to define
-                the order in which samples are stacked. If None, uses
-                list(priors.keys()).
-        """
-        self.priors = priors
-        if keys_order is None:
-            keys_order = list(priors.keys())
-        self.keys_order = keys_order
-        lows = torch.tensor([priors[key].low for key in self.keys_order])
-        highs = torch.tensor([priors[key].high for key in self.keys_order])
-        super().__init__()
-    
+    @property
+    def support(self):
+        return dist.constraints.interval(-torch.pi / 2, torch.pi / 2)
+
+    def to(self, device):
+        return CosineDistribution(device=device)
+
     def sample(self, sample_shape=torch.Size()):
-        """
-        Sample from each individual prior and stack the results into a single tensor.
-        
-        Returns:
-            Tensor of shape sample_shape + (num_priors,)
-        """
+        u = torch.rand(sample_shape, device=self.device)
+        return torch.asin(2 * u - 1)
+
+    def log_prob(self, x):
+        x = x.to(self.device)
+        inside_support = (x >= -torch.pi / 2) & (x <= torch.pi / 2)
+        log_probs = torch.where(
+            inside_support,
+            torch.log(0.5 * torch.cos(x)),
+            torch.tensor(float("-inf"), device=self.device)
+        )
+        return log_probs
+
+def move_dist_to_device(d, device):
+    """Move a distribution's parameters to the specified device."""
+    if isinstance(d, dist.Uniform):
+        return dist.Uniform(d.low.to(device), d.high.to(device), validate_args=False)
+    elif isinstance(d, dist.Normal):
+        return dist.Normal(d.loc.to(device), d.scale.to(device), validate_args=False)
+    elif isinstance(d, dist.TransformedDistribution):
+        base = move_dist_to_device(d.base_dist, device)
+        transforms = d.transforms  # transforms don't need device change
+        return dist.TransformedDistribution(base, transforms)
+    elif hasattr(d, 'to'):
+        return d.to(device)
+    else:
+        raise NotImplementedError(f"Device transfer not implemented for distribution type: {type(d)}")
+
+class JointPriorTensor(dist.Distribution):
+    arg_constraints = {}
+
+    def __init__(self, priors, keys_order=None, device="cpu"):
+        self.device = device
+        self.priors = {k: move_dist_to_device(v, device) for k, v in priors.items()}
+        self.keys_order = keys_order or list(priors.keys())
+
+        self.low = torch.tensor(
+            [self.priors[k].support.lower_bound for k in self.keys_order],
+            device=self.device
+        ).float()
+
+        self.high = torch.tensor(
+            [self.priors[k].support.upper_bound for k in self.keys_order],
+            device=self.device
+        ).float()
+
+        super().__init__()
+
+    def to(self, device):
+        return JointPriorTensor(self.priors, self.keys_order, device)
+
+    @property
+    def support(self):
+        return dist.constraints.interval(self.low, self.high)
+
+    def sample(self, sample_shape=torch.Size()):
         samples_list = []
         for key in self.keys_order:
-            # Sample from the individual prior.
             sample_val = self.priors[key].sample(sample_shape)
-            # If the sample has an extra dimension (e.g., shape (..., 1)), squeeze it.
             if sample_val.ndim > len(sample_shape):
                 sample_val = sample_val.squeeze(-1)
             samples_list.append(sample_val)
-        # Stack along the last dimension so that each sample is a vector.
-        samples_tensor = torch.stack(samples_list, dim=-1)
-        return samples_tensor
-        
+        return torch.stack(samples_list, dim=-1)
+
     def log_prob(self, samples_tensor):
-        """
-        Computes the joint log probability by splitting the tensor and summing
-        individual log probabilities.
-        
-        Args:
-            samples_tensor (Tensor): A tensor of shape sample_shape + (num_priors,)
-            
-        Returns:
-            A tensor of shape sample_shape with the joint log probability.
-        """
         log_probs = []
         for i, key in enumerate(self.keys_order):
-            # Extract the sample corresponding to the i-th prior.
             sample_val = samples_tensor[..., i]
             log_prob_val = self.priors[key].log_prob(sample_val)
             log_probs.append(log_prob_val)
-        # Sum the log probabilities (since the priors are independent).
-        total_log_prob = sum(log_probs)
-        return total_log_prob
+        return sum(log_probs)
+    
+def move_priors_to_device(priors, device):
+        new_priors = {}
+        for key, p in priors.items():
+            if isinstance(p, dist.Uniform):
+                new_priors[key] = dist.Uniform(
+                    p.low.to(device),
+                    p.high.to(device)
+                )
+            elif isinstance(p, dist.Normal):
+                new_priors[key] = dist.Normal(
+                    p.loc.to(device),
+                    p.scale.to(device)
+                )
+            elif isinstance(p, SineDistribution) or isinstance(p, CosineDistribution):
+                new_priors[key] = p.to(device)
+        return new_priors
 
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -325,7 +331,10 @@ if __name__ == "__main__":
         r"Geocent time, $t_0$",                # geocent_time
     ]
 
-    joint_prior = JointPriorTensor(priors, keys_order=order)
+    device = 'cuda'
+
+    priors_on_device = move_priors_to_device(priors, device)
+    joint_prior = JointPriorTensor(priors_on_device, keys_order=list(priors.keys()), device="cuda")
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -363,8 +372,8 @@ if __name__ == "__main__":
 
         return d
     
-    loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/final_round_zoomed_in_de.pt')
-    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/final_round_zoomed_in_posterior.pt')
+    loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_de.pt')
+    loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/tsnpe_posterior.pt')
     limit = 1
 
     for i, sample in enumerate(train_data):
@@ -377,6 +386,7 @@ if __name__ == "__main__":
     posterior_samples = []
     for j in range(100):
             tester = x_train[j, :, :]
+            tester = tester.to('cuda')
             posterior_samples.append(loaded_posterior.sample_batched(torch.Size([1000]), x=tester))
     
     
@@ -423,7 +433,7 @@ if __name__ == "__main__":
 
     # Compute and plot empirical coverage
  
-    credibility_levels, empirical_coverages = compute_coverage_per_param(40, theta_train)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(100, theta_train)
     plot_coverage(credibility_levels, empirical_coverages)
 
     #TARP test - not working? 
@@ -437,7 +447,3 @@ if __name__ == "__main__":
 
     # plot_tarp(ecp, alpha)
     # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tarp_plot.png", dpi=300, bbox_inches='tight')
-
-
-
-
