@@ -406,7 +406,7 @@ if __name__ == "__main__":
 
     # Compute and plot empirical coverage
  
-    credibility_levels, empirical_coverages = compute_coverage_per_param(40, theta_train)
+    credibility_levels, empirical_coverages = compute_coverage_per_param(50, theta_train)
     plot_coverage(credibility_levels, empirical_coverages)
 
     #TARP test - not working? 

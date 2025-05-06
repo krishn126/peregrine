@@ -247,6 +247,23 @@ if __name__ == "__main__":
         "geocent_time",
     ] #same ordering as int / ext priors I believe - do check though
     
+    label_order = [
+        r"Mass Ratio, $q$",                  # mass_ratio
+        r"Chirp Mass, $\mathcal{M}_{\mathrm{C}}$",        # chirp_mass (chirp mass symbol, often curly M)
+        r"$\theta_{\mathrm{jn}}$",  # theta_jn
+        r"Phase, $\phi$",               # phase
+        r"$\theta_1$",           # tilt_1
+        r"$\theta_2$",           # tilt_2
+        r"$a_1$",                # a_1
+        r"$a_2$",                # a_2
+        r"$\phi_{12}$",          # phi_12
+        r"$\phi_{\mathrm{jl}}$", # phi_jl
+        r"Luminosity Distance, $d_L$",                # luminosity_distance
+        r"Declination, $\delta$",             # dec (declination)
+        r"Right Ascension, $\alpha$",             # ra (right ascension)
+        r"Polarization Angle, $\psi$",               # psi (polarization angle)
+        r"Geocent time, $t_0$",                # geocent_time
+    ]
     device = 'cuda'
 
     priors_on_device = move_priors_to_device(priors, device)
@@ -272,7 +289,7 @@ if __name__ == "__main__":
 
     #turn true_params into [1,15] torch tensor
     true_params = torch.tensor([true_params])
-    round_id = 7
+    round_id = 3
     
     def pad_to_width(t, target_width, i):
         current_width = t.shape[i]
@@ -433,17 +450,17 @@ if __name__ == "__main__":
 
         for idx in range(15):
             ax = plt.subplot(5, 3, idx + 1)
-            ax.set_title(f"{order[idx]}")
+            ax.set_title(f"{label_order[idx]}")
             logratios = lrs.logratios[:, idx]
             params = lrs.params[:, idx, 0]
-            weights1 = np.ones_like(posterior_samples[:,0,idx])
+            weights1 = np.ones_like(posterior_samples_round_3_snpe[:,0,idx])
             weights2 = np.exp(logratios.numpy())
-            plt.hist([posterior_samples[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
+            plt.hist([posterior_samples_round_3_snpe[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
             plt.axvline(x=true_params[:,idx], linestyle='--')
 
-        fig.suptitle(f"SNPE Round {round_id} vs TMNRE Round {round_id}", fontsize=20)
+        fig.suptitle("")
         plt.tight_layout()
-        blue_line = mlines.Line2D([], [], color='blue', label=f'SNPE Round {round_id}')
+        blue_line = mlines.Line2D([], [], color='blue', label=f'SNPE Round 3')
         orange_line = mlines.Line2D([], [], color='orange', label=f'TMNRE Round {round_id}')
         fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
 
@@ -456,8 +473,8 @@ if __name__ == "__main__":
 
         for idx in range(15):
             ax = plt.subplot(5, 3, idx + 1)
-            ax.set_title(f"{order[idx]}")
-            plt.hist([posterior_samples[:,0,idx].numpy(), joint_prior_sample[:,idx].numpy()], range=ranges[idx], bins=100, density=True, alpha=0.7)
+            ax.set_title(f"{label_order[idx]}")
+            plt.hist([posterior_samples_round_3_snpe[:,0,idx].numpy(), joint_prior_sample[:,idx].numpy()], range=ranges[idx], bins=100, density=True, alpha=0.7)
             plt.axvline(x=true_params[:,idx], linestyle='--')
 
         fig.suptitle(f"SNPE Round {round_id} vs Priors", fontsize=20)
@@ -472,7 +489,7 @@ if __name__ == "__main__":
     def corner_plot(): 
         fig = plt.figure(figsize=(15, 8))       
 
-        fig = corner.corner(posterior_samples[:,0,:].numpy(), color='purple', range=ranges, labels=order, hist_kwargs={"density": True})
+        fig = corner.corner(posterior_samples_tsnpe[:,0,:].numpy(), color='purple', range=ranges, labels=label_order, hist_kwargs={"density": True})
         corner.corner(dynesty_posterior, color='green', fig=fig, range=ranges, hist_kwargs={"density": True})
         purple_line = mlines.Line2D([], [], color='purple', label=f'TSNPE')
         green_line = mlines.Line2D([], [], color='green', label='Dynesty')
@@ -481,8 +498,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    # fig = plot_posterior_npe_tmnre()
-    # plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_3_snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
+    fig = plot_posterior_npe_tmnre()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/round_3_snpe_vs_tmnre.png", dpi=300, bbox_inches='tight')
     posterior_samples_zoom_in = np.load("/data/kn405/Code/peregrine/peregrine/posterior_samples_zoom_in_npe.npy")
     #JS Divergence Calculations 
     def js_div_calcs():
@@ -522,5 +539,5 @@ if __name__ == "__main__":
         print(f"Jensen-Shannon Divergence between Zoomed In NPE and SNPE Round 3: {js_div_snpe_zoom_in:.4f}")
         print(f"Jensen-Shannon Divergence between Zoomed In NPE and TSNPE: {js_div_tsnpe_zoom_in:.4f}")
     
-    js_div_calcs()
+    # js_div_calcs()
     
