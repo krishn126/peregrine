@@ -16,6 +16,7 @@ x_1_fit = np.array([1792, 2688, 4480, 8960, 19968, 29952, 49920, 62976])  # simu
 y_1_fit = np.array([-2.5372467041015625, -2.1801271438598633, -3.156132936477661, -3.2031116485595703, -3.3537256717681885, -3.4139301776885986, -4.036552429199219, -4.062026500701904])  # test loss variables
 
 approx_crb = 53.372327045597615
+approx_crb_1 = 4.175949573516846
 y = y + approx_crb  # Shift the validation loss 
 y_1 = y_1 + approx_crb  # Shift the validation loss 
 y_fit = y_fit + approx_crb  # Shift the validation loss
@@ -45,18 +46,25 @@ x_fit_1 = np.logspace(np.log10(min(x_1)), np.log10(max(x_1_fit)), 100)  # Log-sp
 y_fit_1 = np.exp(intercept_1) * x_fit_1**slope_1  # Convert back from log space
 
 # Plot log-log graph
-plt.figure(figsize=(8, 6))
-plt.loglog(x, y, 'o', label="Val Loss SNPE")  # Plot original data
-plt.loglog(x_fit, y_fit, 'r--', label=f"Best Fit SNPE in scaling regime")  # Best fit line
-plt.loglog(x_1, y_1, 'x', label="Test Loss TMNRE")  # Plot original data
-plt.loglog(x_fit_1, y_fit_1, 'g--', label=f"Best Fit TMNRE in scaling regime")  # Best fit line
+fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(15, 4))
+axs[0].loglog(x, y, 'o', label="Val Loss")  # Plot original data
+axs[0].loglog(x_fit, y_fit, 'r--', label=f"Best Fit in Scaling Regime")  # Best fit line
+axs[0].set_xlabel("Number of Training Simulations")
+axs[0].set_ylabel("$\mathcal{L}$ - $\mathcal{L}_{CR}$")
+axs[0].set_title("SNPE")
+axs[0].legend()
+axs[1].loglog(x_1, y_1, 'x', label="Test Loss")  # Plot original data
+axs[1].loglog(x_fit_1, y_fit_1, 'g--', label=f"Best Fit in Scaling Regime")  # Best fit line
 #plot horizontal line at  y_1[10]
-plt.axhline(y=y_1[10], color='black', linestyle='--', label=f"TMNRE Converged loss")
+axs[1].axhline(y=y_1[10], color='black', linestyle='--', label=f"TMNRE Converged loss")
+axs[1].set_xlim([10e1, 2.0*10e4])
+axs[1].set_xlabel("Number of Training Simulations")
+axs[1].set_ylabel("$\mathcal{L}$ - $\mathcal{L}_{CR}$")
+axs[1].set_title("TMNRE")
+axs[1].legend()
 
 # Labels and title
-plt.xlabel('Number of Training Simulations')
-plt.ylabel('Shifted Validation Loss (L - L_CR)')
-plt.legend()
+plt.tight_layout()
 
 # Show the plot
 plt.show()
