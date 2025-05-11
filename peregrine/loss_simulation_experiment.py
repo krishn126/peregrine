@@ -15,12 +15,12 @@ y_fit = np.array([-5.38124, -4.79168, -3.5644, -2.19829, -0.26212, 0.91438, 1.30
 x_1_fit = np.array([1792, 2688, 4480, 8960, 19968, 29952, 49920, 62976])  # simulation number variables
 y_1_fit = np.array([-2.5372467041015625, -2.1801271438598633, -3.156132936477661, -3.2031116485595703, -3.3537256717681885, -3.4139301776885986, -4.036552429199219, -4.062026500701904])  # test loss variables
 
-approx_crb = 53.372327045597615
-approx_crb_1 = 4.175949573516846
+approx_crb = 46.13811306219409
+approx_crb_1 = 16.671091249080412
 y = y + approx_crb  # Shift the validation loss 
-y_1 = y_1 + approx_crb  # Shift the validation loss 
+y_1 = y_1 + approx_crb_1 # Shift the validation loss 
 y_fit = y_fit + approx_crb  # Shift the validation loss
-y_1_fit = y_1_fit + approx_crb  # Shift the validation loss
+y_1_fit = y_1_fit + approx_crb_1  # Shift the validation loss
 # Take log of the data
 log_x = np.log(x)
 log_y = np.log(y)

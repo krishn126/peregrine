@@ -8,7 +8,7 @@ x_num = np.array([14933992, 14713292, 14628872, 14608732, 14600162, 14594026])  
 x_num = x_num - 14590290 #trainable parameters minus the embedding network
 y = np.array([-0.55154, -0.26212, -0.04276, 0.46136, 0.53392, 4.14938])  # val loss variables
 
-approx_crb = 52.545037343796665
+approx_crb = 46.13811306219409
 y = y + approx_crb  # Shift the validation loss to be positive
 
 x_prime = x[:-1]
@@ -41,7 +41,7 @@ plt.loglog(x_fit, y_fit, 'r--', label="Best Fit in Scaling Regime")  # Best fit 
 
 # Labels and title
 plt.xlabel('Number of Trainable Parameters in the Model')
-plt.ylabel('Shifted Validation Loss (L - L_CR)')
+plt.ylabel('$\mathcal{L}$ - $\mathcal{L}_{CR}$')
 plt.legend()
 
 # Show the plot
