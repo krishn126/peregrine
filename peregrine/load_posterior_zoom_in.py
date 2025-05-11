@@ -354,7 +354,7 @@ if __name__ == "__main__":
     
     loaded_density_estimator = torch.load('/data/kn405/Code/peregrine/peregrine/final_round_zoomed_in_de.pt')
     loaded_posterior = torch.load('/data/kn405/Code/peregrine/peregrine/final_round_zoomed_in_posterior.pt')
-    posterior_samples = loaded_posterior.sample_batched(torch.Size([100000]), x=obs)
+    posterior_samples = loaded_posterior.sample_batched(torch.Size([10000]), x=obs)
     posterior_samples = posterior_samples.cpu()
     #save posterior samples
     np.save('/data/kn405/Code/peregrine/peregrine/posterior_samples_zoom_in_npe.npy', posterior_samples)
@@ -405,7 +405,7 @@ if __name__ == "__main__":
     dynesty_posterior = np.array([dynesty_posterior[key] for key in order]).T
     
 
-    def crb_from_posterior_samples(posterior_samples):
+    def calculate_crb(posterior_samples):
         """
         Approximate the CRB using posterior samples by calculating the inverse of the variance.
 
@@ -415,13 +415,17 @@ if __name__ == "__main__":
         Returns:
             CRB: Cramér-Rao Bound as an approximation.
         """
+        posterior_samples = posterior_samples.squeeze(1)
         # Compute the covariance matrix from posterior samples
         covariance_matrix = np.cov(posterior_samples.T)
 
         # Compute the CRB as the trace of the inverse of the covariance matrix
-        crb_approx = np.trace(np.log(np.linalg.inv(covariance_matrix)))
+        eigvals = np.linalg.eigvalsh(covariance_matrix)
+        if np.any(eigvals <= 0):
+            print("Warning: covariance matrix is not positive definite.")
+        log_trace = np.sum(np.log(eigvals[eigvals > 0]))  # Avoid invalid log
 
-        return crb_approx
+        return log_trace
     
     def js_divergence(samples_p, samples_q, num_points=1000):
     # Define a common evaluation range
@@ -467,10 +471,12 @@ if __name__ == "__main__":
         return js_div
     
     #CRB Bound
-    def crb_from_posterior_samples(posterior_samples):
-        posterior_samples = posterior_samples.squeeze(1)
-        CRB = crb_from_posterior_samples(posterior_samples)
-        print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
+    # def crb_from_posterior_samples(posterior_samples):
+    #     CRB = calculate_crb(posterior_samples)
+    #     print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
+    log_trace = calculate_crb(posterior_samples)
+    print(f"log trace of CRB approximation: {log_trace}")
+    sys.exit()
 
     # Plot SNPE vs TMNRE posterior
     def plot_posterior_npe_tmnre():

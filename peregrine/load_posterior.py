@@ -391,9 +391,12 @@ if __name__ == "__main__":
         covariance_matrix = np.cov(posterior_samples.T)
 
         # Compute the CRB as the trace of the inverse of the covariance matrix
-        crb_approx = np.trace(np.log(np.linalg.inv(covariance_matrix)))
+        eigvals = np.linalg.eigvalsh(covariance_matrix)
+        if np.any(eigvals <= 0):
+            print("Warning: covariance matrix is not positive definite.")
+        log_trace = np.sum(np.log(eigvals[eigvals > 0]))  # Avoid invalid log
 
-        return crb_approx
+        return log_trace
     
     def js_divergence(samples_p, samples_q, num_points=1000):
     # Define a common evaluation range
@@ -439,8 +442,8 @@ if __name__ == "__main__":
         return js_div
     
     #CRB Bound
-    def crb_from_posterior_samples(posterior_samples):
-        posterior_samples = posterior_samples.squeeze(1)
+    def show_crb(posterior_samples):
+        posterior_samples = posterior_samples.squeeze(2)
         CRB = crb_from_posterior_samples(posterior_samples)
         print(f"Approximate Cramér-Rao Bound (CRB): {CRB}")
 
@@ -455,14 +458,14 @@ if __name__ == "__main__":
             params = lrs.params[:, idx, 0]
             weights1 = np.ones_like(posterior_samples_round_3_snpe[:,0,idx])
             weights2 = np.exp(logratios.numpy())
-            plt.hist([posterior_samples_round_3_snpe[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=0.7)
+            plt.hist([posterior_samples_round_3_snpe[:,0,idx].numpy(), params], weights = [weights1, weights2], range=ranges[idx], bins=100, density=True, alpha=1.0, color= ['green','pink'])
             plt.axvline(x=true_params[:,idx], linestyle='--')
 
         fig.suptitle("")
         plt.tight_layout()
-        blue_line = mlines.Line2D([], [], color='blue', label=f'SNPE Round 3')
-        orange_line = mlines.Line2D([], [], color='orange', label=f'TMNRE Round {round_id}')
-        fig.legend(handles=[blue_line, orange_line], loc="upper right", fontsize=10)
+        green_line = mlines.Line2D([], [], color='green', label=f'SNPE Round 3')
+        pink_line = mlines.Line2D([], [], color='pink', label=f'TMNRE Round {round_id}')
+        fig.legend(handles=[green_line, pink_line], loc="upper right", fontsize=10)
 
         return fig
 
@@ -498,8 +501,8 @@ if __name__ == "__main__":
         return fig
     
     # #Save Plots
-    fig = corner_plot()
-    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/tsnpe_vs_dynesty.png", dpi=300, bbox_inches='tight')
+    fig = plot_posterior_npe_tmnre()
+    plt.savefig(f"/data/kn405/Code/peregrine/posterior_plots/snpe_3_vs_tmnre_3.png", dpi=300, bbox_inches='tight')
     posterior_samples_zoom_in = np.load("/data/kn405/Code/peregrine/peregrine/posterior_samples_zoom_in_npe.npy")
     #JS Divergence Calculations 
     def js_div_calcs():
